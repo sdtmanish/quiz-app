@@ -322,7 +322,7 @@ const LobbyPage = ({
 
   // ⭐ NEW: Generate the full URL for the QR code
   // Replace 'http://localhost:3000' with your deployed frontend URL
-  const joinUrl = `https://quiz-app-pied-omega.vercel.app/?roomId=${roomId}`;
+  const joinUrl = `https://quiz-app-pied-omega.vercel.app/`;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white font-sans p-4">
