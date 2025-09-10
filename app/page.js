@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import QRCode from "react-qr-code";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -157,7 +157,7 @@ const App = () => {
     return (
       <>
         <ScriptLoader onScriptLoaded={setIsScriptLoaded} />{" "}
-        <JoinPage
+        <JoinPageWrapper
           setPage={setPage}
           roomId={roomId}
           setRoomId={setRoomId}
@@ -286,6 +286,15 @@ const JoinPage = ({
       </div>
       {" "}
     </div>
+  );
+};
+
+// Wrapper component to handle the Suspense boundary
+const JoinPageWrapper = (props) => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <JoinPage {...props} />
+    </Suspense>
   );
 };
 
