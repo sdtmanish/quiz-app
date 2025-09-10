@@ -34,7 +34,7 @@ const QUIZ_QUESTIONS = [
     type: "image",
     media: {
       type: "image",
-      url:"/assets/mona.jpg",
+      url: "/assets/mona.jpg",
     },
     options: ["Statue of Liberty", "Eiffel Tower", "Tower Bridge", "Colosseum"],
     correctAnswer: "Eiffel Tower",
@@ -156,15 +156,14 @@ const App = () => {
   if (page === "join") {
     return (
       <>
-                <ScriptLoader onScriptLoaded={setIsScriptLoaded} />       {" "}
+        <ScriptLoader onScriptLoaded={setIsScriptLoaded} />{" "}
         <JoinPage
           setPage={setPage}
           roomId={roomId}
           setRoomId={setRoomId}
           playerName={playerName}
           setPlayerName={setPlayerName}
-        />
-             {" "}
+        />{" "}
       </>
     );
   }
@@ -172,7 +171,7 @@ const App = () => {
   if (isQuizActive && !quizEnded) {
     return (
       <>
-                <ScriptLoader onScriptLoaded={setIsScriptLoaded} />       {" "}
+        <ScriptLoader onScriptLoaded={setIsScriptLoaded} />{" "}
         <QuizPage
           socket={socket}
           roomId={roomId}
@@ -180,8 +179,7 @@ const App = () => {
           currentQuestionIndex={currentQuestionIndex}
           scores={scores}
           adminId={adminId} // Pass adminId down
-        />
-             {" "}
+        />{" "}
       </>
     );
   }
@@ -189,22 +187,21 @@ const App = () => {
   if (quizEnded) {
     return (
       <>
-                <ScriptLoader onScriptLoaded={setIsScriptLoaded} />       {" "}
+        <ScriptLoader onScriptLoaded={setIsScriptLoaded} />{" "}
         <ResultsPage
           scores={scores}
           players={players}
           setPage={setPage}
           setQuizEnded={setQuizEnded}
           adminId={adminId} // Pass adminId down to the results page
-        />
-             {" "}
+        />{" "}
       </>
     );
   }
 
   return (
     <>
-            <ScriptLoader onScriptLoaded={setIsScriptLoaded} />     {" "}
+      <ScriptLoader onScriptLoaded={setIsScriptLoaded} />{" "}
       <LobbyPage
         socket={socket}
         roomId={roomId}
@@ -213,8 +210,7 @@ const App = () => {
         players={players}
         adminId={adminId} // Pass adminId down
         adminName={adminName} // New prop
-      />
-         {" "}
+      />{" "}
     </>
   );
 };
@@ -228,6 +224,14 @@ const JoinPage = ({
   setPlayerName,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const urlRoomId = searchParams.get("roomId");
+    if (urlRoomId) {
+      setRoomId(urlRoomId);
+    }
+  }, [searchParams, setRoomId]);
 
   const handleJoinOrCreate = () => {
     if (!roomId || !playerName) {
@@ -240,15 +244,15 @@ const JoinPage = ({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white font-sans">
-           {" "}
+      {" "}
       <div className="bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-700 w-full max-w-sm">
-               {" "}
+        {" "}
         <h1 className="text-3xl font-extrabold text-center mb-6 text-indigo-400">
           Join or Create Game
         </h1>
-               {" "}
+        {" "}
         <div className="space-y-4">
-                   {" "}
+          {" "}
           <input
             className="w-full bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
             value={roomId}
@@ -256,30 +260,31 @@ const JoinPage = ({
             placeholder="Room ID"
             // readOnly={!!roomId}
             // style={{
-            //   cursor: roomId ? 'not-allowed' : 'text',
-            //   backgroundColor: roomId ? '#4a5568' : '#4a5568'
+            //   cursor: roomId ? 'not-allowed' : 'text',
+            //   backgroundColor: roomId ? '#4a5568' : '#4a5568'
             // }}
           />
-                   {" "}
+          {" "}
           <input
             className="w-full bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
             placeholder="Your Name"
           />
-                 {" "}
+          {" "}
         </div>
-               {" "}
+        {" "}
         <button
           onClick={handleJoinOrCreate}
           disabled={isLoading}
           className="mt-6 w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
         >
-                    {isLoading ? "Connecting..." : "Join or Create Room"}       {" "}
+          {" "}
+          {isLoading ? "Connecting..." : "Join or Create Room"}{" "}
         </button>
-             {" "}
+        {" "}
       </div>
-         {" "}
+      {" "}
     </div>
   );
 };
@@ -320,9 +325,9 @@ const LobbyPage = ({
     );
   }
 
-  // ⭐ NEW: Generate the full URL for the QR code
+  // ⭐ UPDATED: Generate the full URL with room ID for the QR code
   // Replace 'http://localhost:3000' with your deployed frontend URL
-  const joinUrl = `https://quiz-app-pied-omega.vercel.app/`;
+  const joinUrl = `https://quiz-app-pied-omega.vercel.app/?roomId=${roomId}`;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white font-sans p-4">
@@ -574,29 +579,28 @@ const ResultsPage = ({ scores, players, setPage, setQuizEnded, adminId }) => {
   };
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white font-sans p-4">
-           {" "}
+      {" "}
       <div className="bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-700 w-full max-w-lg space-y-6">
-               {" "}
+        {" "}
         <h1 className="text-4xl font-extrabold text-center text-yellow-400">
           Quiz Over!
         </h1>
-               {" "}
-        <p className="text-center text-xl text-gray-300">Final Results</p>     
-                 {" "}
+        {" "}
+        <p className="text-center text-xl text-gray-300">Final Results</p>{" "}
         <div className="bg-gray-700 p-4 rounded-lg shadow-inner border border-gray-600">
-                   {" "}
+          {" "}
           <ul className="space-y-3">
-                       {" "}
+            {" "}
             {sortedScores.map(([socketId, score], index) => (
               <li
                 key={socketId}
                 className="flex items-center justify-between p-3 rounded-lg bg-gray-800 shadow-md"
               >
-                               {" "}
+                {" "}
                 <span className="text-xl font-semibold">
                   {index + 1}. {players[socketId]}
                 </span>
-                               {" "}
+                {" "}
                 <span
                   className={`text-xl font-bold ${
                     socketId === firstPlace
@@ -606,23 +610,24 @@ const ResultsPage = ({ scores, players, setPage, setQuizEnded, adminId }) => {
                 >
                   {score}
                 </span>
-                             {" "}
+                {" "}
               </li>
             ))}
-                     {" "}
+            {" "}
           </ul>
-                 {" "}
+          {" "}
         </div>
-                       {" "}
+        {" "}
         <button
           onClick={handleRestart}
           className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
-                    Play Again        {" "}
+          {" "}
+          Play Again{" "}
         </button>
-             {" "}
+        {" "}
       </div>
-         {" "}
+      {" "}
     </div>
   );
 };
