@@ -3,10 +3,10 @@ import { useState, useEffect } from "react";
 
 // This component is responsible for loading the external Socket.IO
 // library and letting the parent know when it's ready.
-const ScriptLoader = ({ onScriptLoaded }) => {
+const ScriptLoader = ({ onScriptLoaded, src }) => {
   useEffect(() => {
     const script = document.createElement("script");
-    script.src = "https://cdn.socket.io/4.7.4/socket.io.min.js";
+    script.src = src;
     script.async = true;
 
     script.onload = () => {
@@ -18,7 +18,7 @@ const ScriptLoader = ({ onScriptLoaded }) => {
     return () => {
       document.body.removeChild(script);
     };
-  }, [onScriptLoaded]);
+  }, [onScriptLoaded, src]);
 
   return null; // This component doesn't render anything itself
 };
@@ -29,7 +29,7 @@ const App = () => {
   const [roomId, setRoomId] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [socket, setSocket] = useState(null);
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  const [isSocketScriptLoaded, setIsSocketScriptLoaded] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [scores, setScores] = useState({});
@@ -38,11 +38,12 @@ const App = () => {
   const [players, setPlayers] = useState({});
   const [adminId, setAdminId] = useState(null); // Centralized adminId state
   const [adminName, setAdminName] = useState(null); // New state to hold the admin's name
+  const [isQrScriptLoaded, setIsQrScriptLoaded] = useState(false);
 
   // This useEffect hook handles the socket connection and all real-time events.
   // It now only runs after the Socket.IO script has been loaded.
   useEffect(() => {
-    if (page === "lobby" && isScriptLoaded && roomId && playerName) {
+    if (page === "lobby" && isSocketScriptLoaded && roomId && playerName) {
       if (window.io) {
         // Use a consistent URL for both local and production
         const URL = "https://quizhubapi.onrender.com"; // Change this to "http://localhost:3000" for local testing
@@ -93,13 +94,13 @@ const App = () => {
         console.error("Socket.IO library is not available, but should be loaded.");
       }
     }
-  }, [page, isScriptLoaded, roomId, playerName]);
+  }, [page, isSocketScriptLoaded, roomId, playerName]);
 
   // Renders the correct component based on the current page state.
   if (page === "join") {
     return (
       <>
-        <ScriptLoader onScriptLoaded={setIsScriptLoaded} />
+        <ScriptLoader onScriptLoaded={setIsSocketScriptLoaded} src="https://cdn.socket.io/4.7.4/socket.io.min.js" />
         <JoinPage 
           setPage={setPage} 
           roomId={roomId} 
@@ -114,7 +115,7 @@ const App = () => {
   if (isQuizActive && !quizEnded) {
     return (
       <>
-        <ScriptLoader onScriptLoaded={setIsScriptLoaded} />
+        <ScriptLoader onScriptLoaded={setIsSocketScriptLoaded} src="https://cdn.socket.io/4.7.4/socket.io.min.js" />
         <QuizPage 
           socket={socket} 
           roomId={roomId}
@@ -130,7 +131,7 @@ const App = () => {
   if (quizEnded) {
     return (
       <>
-        <ScriptLoader onScriptLoaded={setIsScriptLoaded} />
+        <ScriptLoader onScriptLoaded={setIsSocketScriptLoaded} src="https://cdn.socket.io/4.7.4/socket.io.min.js" />
         <ResultsPage 
           scores={scores} 
           players={players} 
@@ -144,7 +145,8 @@ const App = () => {
 
   return (
     <>
-      <ScriptLoader onScriptLoaded={setIsScriptLoaded} />
+      <ScriptLoader onScriptLoaded={setIsSocketScriptLoaded} src="https://cdn.socket.io/4.7.4/socket.io.min.js" />
+      <ScriptLoader onScriptLoaded={setIsQrScriptLoaded} src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" />
       <LobbyPage 
         socket={socket} 
         roomId={roomId} 
@@ -153,6 +155,7 @@ const App = () => {
         players={players}
         adminId={adminId} // Pass adminId down
         adminName={adminName} // New prop
+        isQrScriptLoaded={isQrScriptLoaded}
       />
     </>
   );
@@ -161,6 +164,15 @@ const App = () => {
 // Component for the "Join/Create Game" page.
 const JoinPage = ({ setPage, roomId, setRoomId, playerName, setPlayerName }) => {
   const [isLoading, setIsLoading] = useState(false);
+
+  // Read the room ID from the URL if it exists
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlRoomId = urlParams.get('roomId');
+    if (urlRoomId) {
+      setRoomId(urlRoomId);
+    }
+  }, [setRoomId]);
 
   const handleJoinOrCreate = () => {
     if (!roomId || !playerName) {
@@ -202,9 +214,10 @@ const JoinPage = ({ setPage, roomId, setRoomId, playerName, setPlayerName }) => 
 };
 
 // Component for the "Lobby" page.
-const LobbyPage = ({ socket, roomId, playerName, setPage, players, adminId, adminName }) => {
+const LobbyPage = ({ socket, roomId, playerName, setPage, players, adminId, adminName, isQrScriptLoaded }) => {
   const isThisUserAdmin = socket && adminId && socket.id === adminId;
   const [message, setMessage] = useState("Connecting to lobby...");
+  const [qrCodeGenerated, setQrCodeGenerated] = useState(false);
 
   useEffect(() => {
     if (socket) {
@@ -212,6 +225,29 @@ const LobbyPage = ({ socket, roomId, playerName, setPage, players, adminId, admi
       setMessage(`Welcome to the lobby, ${playerName}!`);
     }
   }, [socket, playerName]);
+
+  // Generate QR code for the admin to share
+  useEffect(() => {
+    if (isThisUserAdmin && isQrScriptLoaded && !qrCodeGenerated) {
+      const qrCodeElement = document.getElementById("qrcode-container");
+      if (qrCodeElement) {
+        // Clear previous QR code to prevent duplicates
+        qrCodeElement.innerHTML = "";
+        
+        const joinUrl = `https://quiz-app-pied-omega.vercel.app/?roomId=${roomId}`;
+        
+        new window.QRCode(qrCodeElement, {
+          text: joinUrl,
+          width: 128,
+          height: 128,
+          colorDark: "#000000", // Using black for visibility
+          colorLight: "#ffffff",
+          correctLevel: window.QRCode.CorrectLevel.H
+        });
+        setQrCodeGenerated(true);
+      }
+    }
+  }, [isThisUserAdmin, roomId, isQrScriptLoaded, qrCodeGenerated]);
 
   // Function to start the quiz, only callable by the admin
   const startQuiz = () => {
@@ -251,6 +287,13 @@ const LobbyPage = ({ socket, roomId, playerName, setPage, players, adminId, admi
               <span className="text-gray-400">Waiting for the admin to start the quiz...</span>
             )}
           </p>
+
+          {isThisUserAdmin && (
+            <div className="flex flex-col items-center justify-center p-4 bg-gray-700 rounded-lg shadow-inner border border-gray-600">
+                <p className="text-lg font-bold mb-2 text-white">Share this QR code to invite others:</p>
+                <div id="qrcode-container" className="p-2 bg-white rounded-lg"></div>
+            </div>
+          )}
           
           <div className="bg-gray-700 p-4 rounded-lg shadow-inner border border-gray-600">
             {/* ⭐ UPDATED Player Count ⭐ */}
