@@ -2,6 +2,7 @@
   "name": "my-quiz-app",
   "version": "0.1.0",
   "private": true,
+  "type":"module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
@@ -9,6 +10,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "cloudinary": "^2.7.0",
+    "mongoose": "^8.18.1",
+    "multer": "^2.0.2",
     "next": "15.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
