@@ -1,4 +1,4 @@
-import dbConnect from './lib/dbConnect.js';
+import dbConnect from './app/lib/dbConnect.js';
 
 async function testConnection() {
   try {

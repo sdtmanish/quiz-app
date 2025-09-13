@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
+    "baseUrl": "app",  // 👈 point to app folder
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["*"]     // @/models/Admin resolves to app/models/Admin.js
     }
   }
 }
