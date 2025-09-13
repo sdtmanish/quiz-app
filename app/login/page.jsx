@@ -26,11 +26,8 @@ export default function AdminLogin() {
         return;
       }
 
-      // ✅ Save JWT token in localStorage (or cookies if you prefer)
       localStorage.setItem("adminToken", data.token);
-
-      // Redirect to admin dashboard
-      router.push("/admin/dashboard");
+      router.push("/admin-dashboard");
     } catch (err) {
       console.error("Login error:", err);
       setError("Something went wrong");
@@ -38,30 +35,50 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 border rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Admin Login</h1>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      <form onSubmit={handleLogin} className="flex flex-col gap-4">
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="border px-3 py-2 rounded"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="border px-3 py-2 rounded"
-          required
-        />
-        <button type="submit" className="bg-blue-500 text-white py-2 rounded">
-          Login
-        </button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+      <div className="w-full max-w-md bg-gray-900 border border-gray-700 rounded-2xl shadow-xl p-8">
+        <h1 className="text-3xl font-extrabold text-center text-white mb-6">
+          Admin Login
+        </h1>
+        {error && (
+          <div className="bg-red-500/20 text-red-400 px-4 py-2 rounded mb-4 text-sm">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <label className="block text-gray-400 text-sm mb-2">Username</label>
+            <input
+              type="text"
+              placeholder="Enter username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-400 text-sm mb-2">Password</label>
+            <input
+              type="password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold transition duration-200"
+          >
+            Login
+          </button>
+        </form>
+        <p className="text-center text-gray-500 text-sm mt-6">
+          © {new Date().getFullYear()} QuizHub Admin
+        </p>
+      </div>
     </div>
   );
 }
