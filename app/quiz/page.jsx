@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useEffect, useState } from "react";
 import { socket } from "../lib/socket";
 import { useRouter } from "next/navigation";
@@ -33,7 +33,7 @@ export default function QuizPage() {
     socket.emit("join_game", {
       roomId,
       playerName: effectiveName,
-      isAdmin: !!adminName,   // ✅ fix: mark admin properly
+      isAdmin: !!adminName,
     });
 
     socket.on("game_state", (data) => {
@@ -44,9 +44,11 @@ export default function QuizPage() {
       setAdminId(data.adminId);
       setIsAdmin(socket.id === data.adminId);
 
-      if (data.currentQ !== undefined && data.questions?.length > 0) {
-        const currentQIndex = data.currentQ;
-        setQuestion(data.questions[currentQIndex]);
+      if (data.currentQuestionIndex !== undefined) {
+        const currentQIndex = data.currentQuestionIndex;
+        if (socket.id !== data.adminId) {
+          setQuestion(data.questions[socket.id][currentQIndex]);
+        }
         setCurrentIndex(currentQIndex);
       }
     });
