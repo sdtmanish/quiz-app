@@ -16,6 +16,7 @@ export default function QuizPage() {
   const [adminId, setAdminId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [quizOver, setQuizOver] = useState(false);
+  const [eliminatedOptions, setEliminatedOptions] = useState([]); // ✅ New state for eliminated options
 
   const router = useRouter();
 
@@ -58,6 +59,7 @@ export default function QuizPage() {
       setQuestion(question);
       setCurrentIndex(index);
       setSelected(null);
+      setEliminatedOptions([]); // ✅ Reset eliminated options for new question
     });
 
     socket.on("score_update", (updatedScores) => {
@@ -67,7 +69,7 @@ export default function QuizPage() {
 
     socket.on("quiz_ended", () => {
       console.log("🏁 Quiz ended");
-      setQuizOver(true); // ✅ show scoreboard instead of redirect
+      setQuizOver(true);
     });
 
     socket.on("no_questions_found", () => {
@@ -82,6 +84,12 @@ export default function QuizPage() {
       router.push("/");
     });
 
+    // ✅ New listener for option elimination
+    socket.on("option_eliminated", ({ optionIndex }) => {
+      console.log(`❌ Option ${optionIndex} has been eliminated.`);
+      setEliminatedOptions(prev => [...prev, optionIndex]);
+    });
+
     return () => {
       console.log("🧹 Cleaning up socket listeners");
       socket.off("game_state");
@@ -90,6 +98,7 @@ export default function QuizPage() {
       socket.off("quiz_ended");
       socket.off("no_questions_found");
       socket.off("room_not_found");
+      socket.off("option_eliminated"); // ✅ Clean up new listener
     };
   }, [roomId, effectiveName, adminName, router]);
 
@@ -108,7 +117,6 @@ export default function QuizPage() {
     }
   };
 
-  // ✅ Scoreboard when quiz ends
   if (quizOver) {
     const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
 
@@ -156,12 +164,10 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8 flex flex-col items-center">
-      {/* ✅ Render question depending on type */}
       <div className="mb-6 text-center">
         {question.type === "text" && (
           <h2 className="text-3xl font-bold">{question.question}</h2>
         )}
-
         {question.type === "image" && (
           <div>
             <h2 className="text-xl font-semibold mb-4">{question.question}</h2>
@@ -172,7 +178,6 @@ export default function QuizPage() {
             />
           </div>
         )}
-
         {question.type === "audio" && (
           <div>
             <h2 className="text-xl font-semibold mb-4">{question.question}</h2>
@@ -182,7 +187,6 @@ export default function QuizPage() {
             </audio>
           </div>
         )}
-
         {question.type === "video" && (
           <div>
             <h2 className="text-xl font-semibold mb-4">{question.question}</h2>
@@ -194,20 +198,28 @@ export default function QuizPage() {
         )}
       </div>
 
-      {/* ✅ Options */}
       <div className="flex flex-col gap-4 w-full max-w-lg">
-        {question.options.map((opt, i) => (
-          <button
-            key={i}
-            onClick={() => handleSubmit(i)}
-            className={`p-3 rounded-lg border border-gray-600 text-left transition ${
-              selected === i ? "bg-green-600" : "bg-gray-800 hover:bg-gray-700"
-            }`}
-            disabled={isAdmin}
-          >
-            {opt}
-          </button>
-        ))}
+        {question.options.map((opt, i) => {
+          const isEliminated = eliminatedOptions.includes(i);
+          const isDisabled = isAdmin || isEliminated || selected !== null;
+          const buttonClass = `p-3 rounded-lg border text-left transition ${
+            isEliminated
+              ? "bg-gray-700 text-gray-500 line-through cursor-not-allowed border-gray-600"
+              : selected === i
+              ? "bg-green-600 border-green-600"
+              : "bg-gray-800 hover:bg-gray-700 border-gray-600"
+          }`;
+          return (
+            <button
+              key={i}
+              onClick={() => handleSubmit(i)}
+              className={buttonClass}
+              disabled={isDisabled}
+            >
+              {opt}
+            </button>
+          );
+        })}
       </div>
 
       {isAdmin && (
