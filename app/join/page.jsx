@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from "react";
-import { socket } from "./lib/socket";
+import { socket } from "../lib/socket"
 import { useRouter } from "next/navigation";
-import { useGame } from "./context/GameContext";
+import { useGame } from "../context/GameContext"
 
 export default function JoinPage() {
   const [playerName, setPlayerName] = useState("");
