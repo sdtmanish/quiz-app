@@ -50,7 +50,7 @@ export default function AdminDashboard() {
     {
       title: "Create Questions",
       icon: <FilePlus size={32} />,
-      onClick: () => router.push("/admin/create-questions"),
+      onClick: () => router.push("/admin-dashboard/add-questions"),
       color: "from-purple-600 to-purple-800",
     },
     {

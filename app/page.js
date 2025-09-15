@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { socket } from "./lib/socket";
 import { useRouter } from "next/navigation";
-import { useGame } from "./context/GameContext"
+import { useGame } from "./context/GameContext";
 
 export default function JoinPage() {
   const [playerName, setPlayerName] = useState("");
@@ -23,7 +23,6 @@ export default function JoinPage() {
 
     if (!socket.connected) socket.connect();
 
-    // Listen for room errors
     socket.once("room_not_found", () => {
       alert("Room not found! Please check the Room ID.");
       setIsLoading(false);
@@ -34,21 +33,29 @@ export default function JoinPage() {
       setIsLoading(false);
     });
 
-    // Emit join_game as a player
     socket.emit("join_game", { roomId, playerName, isAdmin: false });
 
-    // Save info in context
     setPlayer(playerName);
     setRoom(roomId);
 
-    // Redirect to player lobby
     router.push("/player-lobby");
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white font-sans p-4">
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white font-sans p-4">
+      
+      {/* ✅ Login button pinned to top-right */}
+      <button
+        className="absolute top-4 right-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300"
+        onClick={() => router.push("/login")}   // ✅ fixed
+      >
+        Login
+      </button>
+
       <div className="bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-700 w-full max-w-sm space-y-6">
-        <h1 className="text-3xl font-extrabold text-center text-indigo-400">Join Game</h1>
+        <h1 className="text-3xl font-extrabold text-center text-indigo-400">
+          Join Game
+        </h1>
 
         <input
           className="w-full bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
