@@ -10,6 +10,7 @@ export default function AllQuestions() {
 
   useEffect(() => {
     async function fetchQuestions() {
+      // ✅ Always use adminToken (consistent key)
       const token = localStorage.getItem("adminToken");
 
       if (!token) {
@@ -53,15 +54,15 @@ export default function AllQuestions() {
     fetchQuestions();
   }, []);
 
-  // Delete function
+  // ✅ Delete question with correct token
   async function deleteQuestion(id) {
     const confirmDelete = window.confirm("Are you sure you want to delete this question?");
     if (!confirmDelete) return;
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("adminToken"); // ✅ fixed key
     if (!token) {
       alert("Unauthorized. Please login again.");
-      router.push("/login"); // Redirect to login page
+      router.push("/login"); // redirect if no token
       return;
     }
 
@@ -125,7 +126,11 @@ export default function AllQuestions() {
 
               {q.type === "image" && q.mediaUrl && (
                 <div className="w-full h-28 mb-2 rounded-md overflow-hidden">
-                  <img src={q.mediaUrl} alt="Question media" className="w-full h-full object-cover" />
+                  <img
+                    src={q.mediaUrl}
+                    alt="Question media"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               )}
 
