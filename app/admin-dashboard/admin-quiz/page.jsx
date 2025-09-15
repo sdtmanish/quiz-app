@@ -36,6 +36,7 @@ export default function AdminQuestionsPage() {
       setScores(data.scores || {});
       setCurrentIndex(data.currentQuestionIndex || 0);
       setAdminEliminatedOptions(data.eliminatedOptions || {});
+
       if (
         data.isQuizActive === false &&
         data.currentQuestionIndex >= (data.adminQuestionList?.length ?? 0) - 1
@@ -78,6 +79,8 @@ export default function AdminQuestionsPage() {
   };
 
   const handleExit = () => {
+    socket.emit("admin_exit", { roomId });
+    socket.disconnect();
     router.push("/admin-dashboard/create-room");
   };
 
@@ -91,9 +94,8 @@ export default function AdminQuestionsPage() {
     });
   };
 
-  /** Renders question & media for a single player's current question */
   const renderQuestionContent = (q) => {
-    if (!q) return <p className="text-gray-400">Loading question...</p>;
+    if (!q) return <p className="text-gray-400">Waiting for a question...</p>;
 
     switch (q.type) {
       case "image":
@@ -141,7 +143,6 @@ export default function AdminQuestionsPage() {
     }
   };
 
-  // ---------- Final Scoreboard ------------
   if (quizOver) {
     const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     return (
@@ -155,13 +156,13 @@ export default function AdminQuestionsPage() {
             <p className="text-gray-400">No players participated.</p>
           ) : (
             <div className="space-y-2">
-              {sortedScores.map(([id, score], idx) => (
+              {sortedScores.map(([id, score]) => (
                 <div
                   key={id}
                   className="flex justify-between p-3 border-b border-gray-700 last:border-none"
                 >
                   <span className="font-semibold">
-                    {idx + 1}. {players[id] || "Unknown"}
+                    {players[id] || "Unknown"}
                   </span>
                   <span className="text-green-400">{score}</span>
                 </div>
@@ -179,7 +180,6 @@ export default function AdminQuestionsPage() {
     );
   }
 
-  // ---------- Main Admin View ------------
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <h1 className="text-2xl font-bold mb-6">Admin Question Dashboard</h1>
@@ -187,7 +187,6 @@ export default function AdminQuestionsPage() {
         Room ID: <span className="font-semibold">{roomId}</span>
       </p>
 
-      {/* Live Scoreboard */}
       <div className="bg-gray-800 p-4 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-bold mb-4">🏆 Live Scoreboard</h2>
         {Object.keys(scores).length === 0 ? (
@@ -209,17 +208,15 @@ export default function AdminQuestionsPage() {
         )}
       </div>
 
-      {/* Player-specific question + elimination controls */}
       <div className="space-y-6 mb-8">
         {Object.keys(players).map((id) => {
-          const currentQ = questions[id]?.[currentIndex];
+          // **CORRECTION:** Access the question directly from the questions state object
+          const currentQ = questions[id]; 
           return (
             <div key={id} className="bg-gray-800 p-4 rounded-lg shadow-md">
               <h2 className="text-lg font-semibold mb-2">
                 Player: {players[id]}
               </h2>
-
-              {/* ✅ Render question and media */}
               {renderQuestionContent(currentQ)}
 
               <div className="flex flex-wrap gap-2 mt-3 items-center">
@@ -256,7 +253,6 @@ export default function AdminQuestionsPage() {
         })}
       </div>
 
-      {/* Navigation Buttons */}
       <div className="flex justify-between mt-6">
         <button
           onClick={handleNext}

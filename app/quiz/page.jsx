@@ -1,8 +1,10 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { socket } from "../lib/socket";
 import { useRouter } from "next/navigation";
 import { useGame } from "../context/GameContext";
+import FinalScores from "../components/FinalScore";
 
 export default function QuizPage() {
   const { roomId, playerName, adminName } = useGame();
@@ -15,96 +17,94 @@ export default function QuizPage() {
   const [joined, setJoined] = useState(false);
   const [adminId, setAdminId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [quizOver, setQuizOver] = useState(false);
-  const [eliminatedOptions, setEliminatedOptions] = useState([]); // ✅ New state for eliminated options
+  const [eliminatedOptions, setEliminatedOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [quizEnded, setQuizEnded] = useState(false);
 
   const router = useRouter();
 
   useEffect(() => {
-    console.log("🚀 QuizPage mounted", { roomId, effectiveName });
-
+    // Check for game state before doing anything
     if (!roomId || !effectiveName) {
       router.push("/");
       return;
     }
 
+    // Connect socket if not already connected
     if (!socket.connected) socket.connect();
 
-    console.log("📡 Joining room...");
+    // Join the game on the server
     socket.emit("join_game", {
       roomId,
       playerName: effectiveName,
       isAdmin: !!adminName,
     });
 
+    // Set up all socket event listeners
     socket.on("game_state", (data) => {
-      console.log("📝 Received game_state:", data);
       setScores(data.scores || {});
       setPlayers(data.players || {});
       setJoined(true);
       setAdminId(data.adminId);
-      setIsAdmin(socket.id === data.adminId);
+      
+      const isCurrentUserAdmin = socket.id === data.adminId;
+      setIsAdmin(isCurrentUserAdmin);
+      setLoading(false);
 
-      if (data.currentQuestionIndex !== undefined) {
-        const currentQIndex = data.currentQuestionIndex;
-        if (socket.id !== data.adminId) {
-          setQuestion(data.questions[socket.id][currentQIndex]);
-        }
-        setCurrentIndex(currentQIndex);
+      if (isCurrentUserAdmin && data.questions && data.questions[socket.id]) {
+        setQuestion(data.questions[socket.id]);
+        setCurrentIndex(data.currentQuestionIndex);
       }
     });
 
     socket.on("show_question", ({ question, index }) => {
-      console.log("❓ Received show_question:", question, "Index:", index);
+      setQuizEnded(false);
       setQuestion(question);
       setCurrentIndex(index);
       setSelected(null);
-      setEliminatedOptions([]); // ✅ Reset eliminated options for new question
+      setEliminatedOptions([]);
     });
 
     socket.on("score_update", (updatedScores) => {
-      console.log("🏆 Score update:", updatedScores);
       setScores(updatedScores);
     });
 
-    socket.on("quiz_ended", () => {
-      console.log("🏁 Quiz ended");
-      setQuizOver(true);
+    socket.on("quiz_ended", (finalScores) => {
+      setScores(finalScores);
+      setQuizEnded(true);
+      setQuestion(null);
+      alert("The quiz has ended!");
     });
 
     socket.on("no_questions_found", () => {
-      console.log("⚠️ No questions found");
       alert("No questions found in the database.");
       router.push(isAdmin ? "/admin-dashboard/admin-lobby" : "/");
     });
 
     socket.on("room_not_found", () => {
-      console.log("❌ Room not found");
       alert("Room not found. Please check the room ID.");
       router.push("/");
     });
 
-    // ✅ New listener for option elimination
     socket.on("option_eliminated", ({ optionIndex }) => {
-      console.log(`❌ Option ${optionIndex} has been eliminated.`);
       setEliminatedOptions(prev => [...prev, optionIndex]);
     });
 
+    // Cleanup function to prevent memory leaks and duplicate listeners
     return () => {
-      console.log("🧹 Cleaning up socket listeners");
+      socket.disconnect();
       socket.off("game_state");
       socket.off("show_question");
       socket.off("score_update");
       socket.off("quiz_ended");
       socket.off("no_questions_found");
       socket.off("room_not_found");
-      socket.off("option_eliminated"); // ✅ Clean up new listener
+      socket.off("option_eliminated");
     };
-  }, [roomId, effectiveName, adminName, router]);
+  }, [roomId, effectiveName, adminName, router]); // `isAdmin` has been removed.
 
   const handleSubmit = (answerIndex) => {
     if (!isAdmin) {
-      console.log("✏️ Submitting answer:", answerIndex);
       setSelected(answerIndex);
       socket.emit("submit_answer", { roomId, answer: answerIndex });
     }
@@ -112,41 +112,11 @@ export default function QuizPage() {
 
   const handleNext = () => {
     if (isAdmin) {
-      console.log("➡️ Admin requesting next question");
       socket.emit("next_question", { roomId });
     }
   };
 
-  if (quizOver) {
-    const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-
-    return (
-      <div className="min-h-screen bg-gray-900 text-white p-8 flex flex-col items-center">
-        <h2 className="text-3xl font-bold mb-6">🏆 Final Scores</h2>
-        <div className="w-full max-w-md bg-gray-800 rounded-lg p-6 shadow-lg">
-          {sortedScores.map(([id, score], idx) => (
-            <div
-              key={id}
-              className="flex justify-between p-3 border-b border-gray-700 last:border-none"
-            >
-              <span className="font-semibold">
-                {idx + 1}. {players[id] || "Unknown"}
-              </span>
-              <span className="text-green-400">{score}</span>
-            </div>
-          ))}
-        </div>
-        <button
-          onClick={() => router.push("/")}
-          className="mt-6 bg-green-600 hover:bg-green-700 py-3 px-6 rounded-lg font-bold"
-        >
-          Exit
-        </button>
-      </div>
-    );
-  }
-
-  if (!joined) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-gray-900">
         Joining room...
@@ -154,10 +124,16 @@ export default function QuizPage() {
     );
   }
 
+  if (quizEnded) {
+    return (
+      <FinalScores scores={scores} players={players} onRestart={() => router.push("/")} />
+    );
+  }
+
   if (!question) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-gray-900">
-        Loading question...
+        Waiting for the admin to start the quiz...
       </div>
     );
   }
