@@ -83,10 +83,7 @@ export default function CreateRoomPage() {
           placeholder="Room ID"
         />
 
-        <div className="flex flex-col items-center p-4 bg-gray-700 rounded-lg border border-gray-600">
-          <p className="text-gray-200 mb-2">Scan this QR to join:</p>
-          <div id="qrcode-container" />
-        </div>
+
 
         <button
           onClick={handleCreateRoom}
