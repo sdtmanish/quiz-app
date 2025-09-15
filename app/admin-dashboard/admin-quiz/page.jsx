@@ -28,16 +28,12 @@ export default function AdminQuestionsPage() {
       isAdmin: true,
     });
 
+    // Make this the primary handler for all state updates
     socket.on("game_state", (data) => {
       console.log("📝 Received game_state for admin", data);
       setPlayers(data.players || {});
       setQuestions(data.questions || {});
       setCurrentIndex(data.currentQuestionIndex || 0);
-    });
-
-    socket.on("show_question", ({ index }) => {
-      console.log("🔄 Question updated to", index);
-      setCurrentIndex(index);
     });
 
     socket.on("score_update", (updatedScores) => {
@@ -55,7 +51,6 @@ export default function AdminQuestionsPage() {
 
     return () => {
       socket.off("game_state");
-      socket.off("show_question");
       socket.off("score_update");
       socket.off("quiz_ended");
       socket.off("room_not_found");
@@ -74,10 +69,13 @@ export default function AdminQuestionsPage() {
       <div className="space-y-4 mb-8">
         {Object.keys(players).map((id) => (
           <div key={id} className="bg-gray-800 p-4 rounded-lg shadow-md">
-            <h2 className="text-lg font-semibold">{players[id]}</h2>
+            <h2 className="text-lg font-semibold">Player: {players[id]}</h2>
             <p className="text-gray-300 mt-2">
               Question {currentIndex + 1}:{" "}
               {questions[id]?.[currentIndex]?.question || "Loading..."}
+            </p>
+            <p className="text-gray-300">
+              Answer: {questions[id]?.[currentIndex]?.answer || "Not available"}
             </p>
           </div>
         ))}
