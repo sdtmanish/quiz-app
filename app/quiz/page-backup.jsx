@@ -31,6 +31,18 @@ export default function QuizPage() {
       return;
     }
 
+  useEffect(() => {
+    if (!roomId || !effectiveName) {
+      router.push("/");
+      return;
+    }
+
+  useEffect(() => {
+    if (!roomId || !effectiveName) {
+      router.push("/");
+      return;
+    }
+
     if (!socket.connected) {
       socket.connect();
     }
@@ -108,7 +120,7 @@ export default function QuizPage() {
       socket.off("room_not_found");
       socket.off("option_eliminated");
     };
-  }, [roomId, effectiveName, adminName, router, isAdmin]);
+  }, [roomId, effectiveName, adminName, router]);
 
   const handleSubmit = (answerIndex) => {
     if (!isAdmin) {
@@ -199,39 +211,20 @@ export default function QuizPage() {
               className={buttonClass}
               disabled={isDisabled}
             >
-              {i + 1}. {opt}
+              {opt}
             </button>
           );
         })}
       </div>
 
       {isAdmin && (
-        <div className="mt-8 flex gap-4">
-          <button
-            onClick={handleNext}
-            className="bg-blue-600 hover:bg-blue-700 py-3 px-6 rounded-lg font-bold"
-          >
-            Next Question
-          </button>
-        </div>
+        <button
+          onClick={handleNext}
+          className="mt-6 bg-green-600 hover:bg-green-700 py-3 px-6 rounded-lg font-bold"
+        >
+          Next Question
+        </button>
       )}
-
-      <div className="mt-8 text-center">
-        <p className="text-lg">Room ID: <span className="font-mono">{roomId}</span></p>
-        <p className="text-lg">Question {currentIndex + 1}</p>
-      </div>
-
-      <div className="mt-6 bg-gray-800 p-4 rounded-lg">
-        <h3 className="text-lg font-bold mb-2">Scores</h3>
-        {Object.entries(scores)
-          .sort(([, a], [, b]) => b - a)
-          .map(([id, score]) => (
-            <div key={id} className="flex justify-between">
-              <span>{players[id] || "Unknown"}</span>
-              <span>{score}</span>
-            </div>
-          ))}
-      </div>
     </div>
   );
 }

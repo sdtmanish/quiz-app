@@ -12,6 +12,24 @@ export default function CreateRoomPage() {
   const [qrCodeGenerated, setQrCodeGenerated] = useState(false);
   const router = useRouter();
 
+  // Check for authentication
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    // Verify token is still valid
+    fetch("/api/admin/verify", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Unauthorized");
+      })
+      .catch(() => router.push("/login"));
+  }, [router]);
+
   // Listen for game_state once
   useEffect(() => {
     socket.on("game_state", (data) => {

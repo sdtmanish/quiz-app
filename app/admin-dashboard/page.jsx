@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, PlusCircle, FilePlus, ListChecks } from "lucide-react";
+import { Users, PlusCircle, FilePlus, ListChecks, LogOut } from "lucide-react";
+import { useGame } from "../context/GameContext";
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const { clearGameData } = useGame();
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -23,8 +25,18 @@ export default function AdminDashboard() {
         return res.json();
       })
       .then(() => setLoading(false))
-      .catch(() => router.push("/login"));
-  }, [router]);
+      .catch(() => {
+        localStorage.removeItem("adminToken");
+        clearGameData();
+        router.push("/login");
+      });
+  }, [router, clearGameData]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+    clearGameData();
+    router.push("/login");
+  };
 
   if (loading) {
     return (
@@ -63,9 +75,18 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-gray-900 via-gray-800 to-black p-8">
-      <h1 className="text-4xl font-extrabold text-white mb-10 text-center">
-        Admin Dashboard
-      </h1>
+      <div className="w-full max-w-4xl flex justify-between items-center mb-10">
+        <h1 className="text-4xl font-extrabold text-white text-center">
+          Admin Dashboard
+        </h1>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          <LogOut size={20} />
+          Logout
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-full max-w-4xl">
         {cards.map((card, idx) => (
