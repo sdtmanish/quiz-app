@@ -20,6 +20,8 @@ export default function QuizPage() {
   const [eliminatedOptions, setEliminatedOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quizEnded, setQuizEnded] = useState(false);
+  const [answerSubmitted, setAnswerSubmitted] = useState(false);
+  const [correctAnswer, setCorrectAnswer] = useState(null);
 
   const router = useRouter();
   // ✅ Use a ref to ensure the join event is only sent once per mount
@@ -71,6 +73,8 @@ export default function QuizPage() {
       setCurrentIndex(index);
       setSelected(null);
       setEliminatedOptions([]);
+      setAnswerSubmitted(false);
+      setCorrectAnswer(null);
     });
 
     socket.on("score_update", (updatedScores) => {
@@ -98,6 +102,11 @@ export default function QuizPage() {
       setEliminatedOptions((prev) => [...prev, optionIndex]);
     });
 
+    socket.on("answer_result", ({ correctAnswer, isCorrect }) => {
+      setCorrectAnswer(correctAnswer);
+      setAnswerSubmitted(true);
+    });
+
     // Cleanup function
     return () => {
       socket.off("game_state");
@@ -107,11 +116,12 @@ export default function QuizPage() {
       socket.off("no_questions_found");
       socket.off("room_not_found");
       socket.off("option_eliminated");
+      socket.off("answer_result");
     };
   }, [roomId, effectiveName, adminName, router, isAdmin]);
 
   const handleSubmit = (answerIndex) => {
-    if (!isAdmin) {
+    if (!isAdmin && !answerSubmitted) {
       setSelected(answerIndex);
       socket.emit("submit_answer", { roomId, answer: answerIndex });
     }
@@ -237,7 +247,10 @@ export default function QuizPage() {
               {question.options.map((opt, i) => {
                 const isEliminated = eliminatedOptions.includes(i);
                 const isSelected = selected === i;
-                const isDisabled = isAdmin || isEliminated || selected !== null;
+                const isCorrect = correctAnswer === i;
+                const isWrong = answerSubmitted && isSelected && correctAnswer !== i;
+                const showCorrect = answerSubmitted && correctAnswer === i;
+                const isDisabled = isAdmin || isEliminated || answerSubmitted;
                 
                 return (
                   <button
@@ -247,8 +260,12 @@ export default function QuizPage() {
                     className={`group relative p-4 rounded-xl border-2 text-left transition-all duration-300 transform min-h-0 ${
                       isEliminated
                         ? "bg-red-900/20 border-red-500/50 text-red-300 line-through cursor-not-allowed opacity-50"
-                        : isSelected
+                        : isWrong
+                        ? "bg-gradient-to-r from-red-500/30 to-red-600/30 border-red-400 shadow-lg shadow-red-500/20"
+                        : showCorrect
                         ? "bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-green-400 shadow-lg shadow-green-500/20 scale-[1.02]"
+                        : isSelected && !answerSubmitted
+                        ? "bg-gradient-to-r from-blue-500/30 to-blue-600/30 border-blue-400 shadow-lg shadow-blue-500/20 scale-[1.01]"
                         : "bg-white/10 backdrop-blur-sm border-white/20 hover:border-blue-400/50 hover:bg-blue-500/10 hover:scale-[1.01] hover:shadow-lg"
                     } ${!isDisabled ? "cursor-pointer" : ""}`}
                   >
@@ -256,20 +273,34 @@ export default function QuizPage() {
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
                         isEliminated
                           ? "bg-red-500/30 text-red-300"
-                          : isSelected
+                          : isWrong
+                          ? "bg-red-500 text-white"
+                          : showCorrect
                           ? "bg-green-500 text-white animate-pulse"
+                          : isSelected && !answerSubmitted
+                          ? "bg-blue-500 text-white animate-pulse"
                           : "bg-white/20 text-white group-hover:bg-blue-500/50"
                       }`}>
-                        {isEliminated ? "❌" : isSelected ? "✓" : String.fromCharCode(65 + i)}
+                        {isEliminated ? "❌" : isWrong ? "✗" : showCorrect ? "✓" : isSelected && !answerSubmitted ? "?" : String.fromCharCode(65 + i)}
                       </div>
                       <span className={`font-medium flex-1 text-sm md:text-base ${
-                        isSelected ? "text-white font-bold" : "text-gray-100"
+                        isWrong ? "text-red-200 font-bold" : showCorrect ? "text-white font-bold" : isSelected && !answerSubmitted ? "text-blue-200 font-bold" : "text-gray-100"
                       }`}>
                         {opt}
                       </span>
-                      {isSelected && (
+                      {isWrong && (
+                        <div className="text-red-400 text-xl">
+                          😞
+                        </div>
+                      )}
+                      {showCorrect && (
                         <div className="text-green-400 text-xl animate-bounce">
                           🎉
+                        </div>
+                      )}
+                      {isSelected && !answerSubmitted && (
+                        <div className="text-blue-400 text-xl animate-pulse">
+                          ⏳
                         </div>
                       )}
                     </div>
