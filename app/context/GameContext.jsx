@@ -65,6 +65,20 @@ export const GameProvider = ({ children }) => {
     setIsAdmin(false);
   };
 
+  const saveQuizState = (quizData) => {
+    if (typeof window !== 'undefined' && roomId) {
+      localStorage.setItem(`quiz-state-${roomId}`, JSON.stringify(quizData));
+    }
+  };
+
+  const getQuizState = () => {
+    if (typeof window !== 'undefined' && roomId) {
+      const saved = localStorage.getItem(`quiz-state-${roomId}`);
+      return saved ? JSON.parse(saved) : null;
+    }
+    return null;
+  };
+
   const clearGameData = () => {
     setRoomId("");
     setAdminName("");
@@ -75,6 +89,11 @@ export const GameProvider = ({ children }) => {
       localStorage.removeItem('quiz-adminName');
       localStorage.removeItem('quiz-playerName');
       localStorage.removeItem('quiz-isAdmin');
+      
+      // Clear quiz state for current room
+      if (roomId) {
+        localStorage.removeItem(`quiz-state-${roomId}`);
+      }
     }
   };
 
@@ -90,6 +109,8 @@ export const GameProvider = ({ children }) => {
         isAdmin,
         setIsAdmin,
         clearGameData,
+        saveQuizState,
+        getQuizState,
       }}
     >
       {children}

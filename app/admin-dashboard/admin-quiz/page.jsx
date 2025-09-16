@@ -44,6 +44,11 @@ export default function AdminQuestionsPage() {
       setCurrentIndex(data.currentQuestionIndex || 0);
       setAdminEliminatedOptions(data.eliminatedOptions || {});
 
+      // Handle quiz restoration after admin refresh
+      if (data.isQuizActive === true && data.currentQuestionIndex >= 0) {
+        console.log("🔄 Restoring active quiz state:", data.currentQuestionIndex);
+      }
+
       if (
         data.isQuizActive === false &&
         data.currentQuestionIndex >= (data.adminQuestionList?.length ?? 0) - 1
@@ -57,6 +62,11 @@ export default function AdminQuestionsPage() {
     socket.on("room_not_found", () => {
       alert("Room not found");
       router.push("/");
+    });
+
+    socket.on("admin_exists", () => {
+      alert("Another admin is already controlling this room");
+      router.push("/admin-dashboard/create-room");
     });
 
     socket.on("option_eliminated", ({ optionIndex, targetPlayerId }) => {
@@ -75,6 +85,7 @@ export default function AdminQuestionsPage() {
       socket.off("score_update");
       socket.off("quiz_ended");
       socket.off("room_not_found");
+      socket.off("admin_exists");
       socket.off("option_eliminated");
       socket.off("show_question");
     };
