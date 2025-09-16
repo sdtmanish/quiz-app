@@ -14,6 +14,13 @@ export default function AdminLobbyPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Check admin authentication
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
     if (!roomId || !adminName) {
       router.push("/admin-dashboard/create-room");
       return;
