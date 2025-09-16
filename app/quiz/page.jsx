@@ -102,6 +102,10 @@ export default function QuizPage() {
       setEliminatedOptions((prev) => [...prev, optionIndex]);
     });
 
+    socket.on("option_restored", ({ optionIndex }) => {
+      setEliminatedOptions((prev) => prev.filter(idx => idx !== optionIndex));
+    });
+
     socket.on("answer_result", ({ correctAnswer, isCorrect }) => {
       setCorrectAnswer(correctAnswer);
       setAnswerSubmitted(true);
@@ -116,6 +120,7 @@ export default function QuizPage() {
       socket.off("no_questions_found");
       socket.off("room_not_found");
       socket.off("option_eliminated");
+      socket.off("option_restored");
       socket.off("answer_result");
     };
   }, [roomId, effectiveName, adminName, router, isAdmin]);
