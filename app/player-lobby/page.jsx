@@ -1,41 +1,48 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react"; // ✅ Import useRef
 import { socket } from "../lib/socket";
 import { useRouter } from "next/navigation";
 import { useGame } from "../context/GameContext";
 
 export default function PlayerLobbyPage() {
-  const { roomId, playerName } = useGame();
-  const [players, setPlayers] = useState({});
-  const [scores, setScores] = useState({});
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const { roomId, playerName } = useGame();
+  const [players, setPlayers] = useState({});
+  const [scores, setScores] = useState({});
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-  useEffect(() => {
-    if (!roomId || !playerName) {
-      router.push("/join");
-      return;
-    }
+  // ✅ Create a ref to track if the join event has been sent
+  const hasJoinedRef = useRef(false);
 
-    if (!socket.connected) socket.connect();
-    socket.emit("join_game", { roomId, playerName, isAdmin: false });
+  useEffect(() => {
+    if (!roomId || !playerName) {
+      router.push("/");
+      return;
+    }
 
-    socket.on("game_state", ({ players, scores }) => {
-      setPlayers(players);
-      setScores(scores);
-      setLoading(false);
-    });
+    // ✅ Only emit the event if the ref is false
+    if (!hasJoinedRef.current) {
+      if (!socket.connected) socket.connect();
+      socket.emit("join_game", { roomId, playerName, isAdmin: false });
+      hasJoinedRef.current = true; // ✅ Set ref to true after emitting
+    }
 
-    socket.on("show_question", ({ question, index }) => {
-      router.push("/quiz");
-    });
+    socket.on("game_state", ({ players, scores }) => {
+      setPlayers(players);
+      setScores(scores);
+      setLoading(false);
+    });
 
-    return () => {
-      socket.off("game_state");
-      socket.off("show_question");
-    };
-  }, [roomId, playerName, router]);
+    socket.on("show_question", ({ question, index }) => {
+      router.push("/quiz");
+    });
+
+    return () => {
+      socket.off("game_state");
+      socket.off("show_question");
+    };
+  }, [roomId, playerName, router]);
 
   if (loading) {
     return (

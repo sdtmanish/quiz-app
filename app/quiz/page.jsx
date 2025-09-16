@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { socket } from "../lib/socket";
 import { useRouter } from "next/navigation";
 import { useGame } from "../context/GameContext";
@@ -22,23 +22,23 @@ export default function QuizPage() {
   const [quizEnded, setQuizEnded] = useState(false);
 
   const router = useRouter();
+  // ✅ Use a ref to ensure the join event is only sent once per mount
+  const hasJoinedRef = useRef(false);
 
   useEffect(() => {
-    // Check for game state before doing anything
     if (!roomId || !effectiveName) {
       router.push("/");
       return;
     }
 
-    // Connect socket if not already connected
-    if (!socket.connected) socket.connect();
-
-    // Join the game on the server
-    socket.emit("join_game", {
-      roomId,
-      playerName: effectiveName,
-      isAdmin: !!adminName,
-    });
+    // ✅ Conditional check with the ref
+    if (!hasJoinedRef.current) {
+      if (!socket.connected) {
+        socket.connect();
+      }
+      
+      hasJoinedRef.current = true; // ✅ Set the ref to true after emitting
+    }
 
     // Set up all socket event listeners
     socket.on("game_state", (data) => {
@@ -46,11 +46,9 @@ export default function QuizPage() {
       setPlayers(data.players || {});
       setJoined(true);
       setAdminId(data.adminId);
-      
       const isCurrentUserAdmin = socket.id === data.adminId;
       setIsAdmin(isCurrentUserAdmin);
       setLoading(false);
-
       if (isCurrentUserAdmin && data.questions && data.questions[socket.id]) {
         setQuestion(data.questions[socket.id]);
         setCurrentIndex(data.currentQuestionIndex);
@@ -87,12 +85,11 @@ export default function QuizPage() {
     });
 
     socket.on("option_eliminated", ({ optionIndex }) => {
-      setEliminatedOptions(prev => [...prev, optionIndex]);
+      setEliminatedOptions((prev) => [...prev, optionIndex]);
     });
 
-    // Cleanup function to prevent memory leaks and duplicate listeners
+    // Cleanup function
     return () => {
-      socket.disconnect();
       socket.off("game_state");
       socket.off("show_question");
       socket.off("score_update");
@@ -101,7 +98,7 @@ export default function QuizPage() {
       socket.off("room_not_found");
       socket.off("option_eliminated");
     };
-  }, [roomId, effectiveName, adminName, router]); // `isAdmin` has been removed.
+  }, [roomId, effectiveName, adminName, router]);
 
   const handleSubmit = (answerIndex) => {
     if (!isAdmin) {

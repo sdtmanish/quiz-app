@@ -33,7 +33,7 @@ export default function JoinPage() {
       setIsLoading(false);
     });
 
-    socket.emit("join_game", { roomId, playerName, isAdmin: false });
+    // socket.emit("join_game", { roomId, playerName, isAdmin: false });
 
     setPlayer(playerName);
     setRoom(roomId);
