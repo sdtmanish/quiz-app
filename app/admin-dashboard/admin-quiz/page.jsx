@@ -164,126 +164,255 @@ export default function AdminQuestionsPage() {
   if (quizOver) {
     const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-8 flex flex-col items-center">
-        <h2 className="text-3xl font-bold mb-6">🏆 Final Scoreboard</h2>
-        <p className="mb-4">
-          Room ID: <span className="font-semibold">{roomId}</span>
-        </p>
-        <div className="w-full max-w-md bg-gray-800 rounded-lg p-6 shadow-lg">
-          {sortedScores.length === 0 ? (
-            <p className="text-gray-400">No players participated.</p>
-          ) : (
-            <div className="space-y-2">
-              {sortedScores.map(([id, score]) => (
-                <div
-                  key={id}
-                  className="flex justify-between p-3 border-b border-gray-700 last:border-none"
-                >
-                  <span className="font-semibold">
-                    {players[id] || "Unknown"}
-                  </span>
-                  <span className="text-green-400">{score}</span>
-                </div>
-              ))}
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-8 flex flex-col items-center">
+        <div className="max-w-4xl w-full">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-500 rounded-full mb-4 animate-bounce">
+              <span className="text-4xl">🏆</span>
             </div>
-          )}
+            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+              Quiz Complete!
+            </h2>
+            <p className="text-xl text-gray-300">
+              Room ID: <span className="font-mono font-bold text-blue-400">{roomId}</span>
+            </p>
+          </div>
+
+          {/* Final Scoreboard */}
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+            <h3 className="text-2xl font-bold mb-6 text-center text-yellow-300">Final Leaderboard</h3>
+            {sortedScores.length === 0 ? (
+              <div className="text-center text-gray-400 py-8">
+                <span className="text-6xl mb-4 block">😴</span>
+                <p className="text-lg">No players participated in this quiz.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sortedScores.map(([id, score], index) => (
+                  <div
+                    key={id}
+                    className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${
+                      index === 0
+                        ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/50"
+                        : index === 1
+                        ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border-2 border-gray-400/50"
+                        : index === 2
+                        ? "bg-gradient-to-r from-orange-600/20 to-red-600/20 border-2 border-orange-400/50"
+                        : "bg-white/5 border border-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                        index === 0 ? "bg-yellow-500 text-black" :
+                        index === 1 ? "bg-gray-400 text-black" :
+                        index === 2 ? "bg-orange-600 text-white" :
+                        "bg-blue-600 text-white"
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <span className="text-lg font-semibold">
+                        {players[id] || "Unknown Player"}
+                      </span>
+                      {index === 0 && <span className="text-2xl">👑</span>}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-2xl font-bold text-green-400">{score}</span>
+                      <span className="text-sm text-gray-400">pts</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Action Button */}
+          <div className="text-center mt-8">
+            <button
+              onClick={handleExit}
+              className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-bold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            >
+              <span className="mr-2">🚪</span>
+              Exit Quiz Room
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleExit}
-          className="mt-6 bg-red-600 hover:bg-red-700 py-3 px-6 rounded-lg font-bold"
-        >
-          Exit Room
-        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <h1 className="text-2xl font-bold mb-6">Admin Question Dashboard</h1>
-      <p className="mb-4">
-        Room ID: <span className="font-semibold">{roomId}</span>
-      </p>
-
-      <div className="bg-gray-800 p-4 rounded-lg shadow-md mb-8">
-        <h2 className="text-xl font-bold mb-4">🏆 Live Scoreboard</h2>
-        {Object.keys(scores).length === 0 ? (
-          <p className="text-gray-400">No scores yet...</p>
-        ) : (
-          <div className="space-y-2">
-            {Object.entries(scores)
-              .sort(([, a], [, b]) => b - a)
-              .map(([id, score]) => (
-                <div
-                  key={id}
-                  className="flex justify-between items-center p-2 bg-gray-700 rounded-md"
-                >
-                  <span className="font-semibold">{players[id] || "Unknown"}</span>
-                  <span className="text-green-400 font-bold">{score}</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-6 border border-white/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Admin Quiz Dashboard
+              </h1>
+              <div className="flex items-center space-x-4 mt-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-gray-300">Live Quiz Active</span>
                 </div>
-              ))}
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-6 mb-8">
-        {Object.keys(players).map((id) => {
-          // **CORRECTION:** Access the question directly from the questions state object
-          const currentQ = questions[id]; 
-          return (
-            <div key={id} className="bg-gray-800 p-4 rounded-lg shadow-md">
-              <h2 className="text-lg font-semibold mb-2">
-                Player: {players[id]}
-              </h2>
-              {renderQuestionContent(currentQ)}
-
-              <div className="flex flex-wrap gap-2 mt-3 items-center">
-                <p className="text-sm font-semibold text-gray-400 shrink-0">
-                  Eliminate:
-                </p>
-                {currentQ?.options?.map((opt, i) => {
-                  const eliminated = adminEliminatedOptions[id]?.includes(i);
-                  const btnClass = `py-1 px-3 rounded text-sm font-bold transition ${
-                    eliminated
-                      ? "bg-red-800 border border-red-500 text-red-100 line-through cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700 text-white"
-                  }`;
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => handleEliminateOption(id, i)}
-                      className={btnClass}
-                      disabled={eliminated}
-                    >
-                      {i + 1}. {opt}
-                    </button>
-                  );
-                })}
+                <div className="bg-blue-500/20 px-3 py-1 rounded-full border border-blue-400/30">
+                  <span className="text-sm font-mono">Room: {roomId}</span>
+                </div>
               </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-400">
+                Q{currentIndex + 1}
+              </div>
+              <div className="text-sm text-gray-400">Current Question</div>
+            </div>
+          </div>
+        </div>
 
-              {currentQ?.answer && (
-                <p className="text-gray-300 mt-2">
-                  Correct Answer: {currentQ.answer}
-                </p>
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Column - Live Scoreboard */}
+          <div className="lg:col-span-1">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 sticky top-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <span className="text-2xl">🏆</span>
+                <h2 className="text-xl font-bold text-yellow-400">Live Leaderboard</h2>
+              </div>
+              {Object.keys(scores).length === 0 ? (
+                <div className="text-center py-8">
+                  <span className="text-4xl mb-2 block">⏳</span>
+                  <p className="text-gray-400">Waiting for responses...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {Object.entries(scores)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([id, score], index) => (
+                      <div
+                        key={id}
+                        className={`flex justify-between items-center p-3 rounded-xl transition-all duration-300 ${
+                          index === 0 
+                            ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30" 
+                            : "bg-white/5 border border-white/10"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            index === 0 ? "bg-yellow-500 text-black" : "bg-blue-500 text-white"
+                          }`}>
+                            {index + 1}
+                          </div>
+                          <span className="font-semibold">{players[id] || "Unknown"}</span>
+                          {index === 0 && <span className="text-lg">👑</span>}
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-lg font-bold text-green-400">{score}</span>
+                          <span className="text-xs text-gray-400">pts</span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
               )}
             </div>
-          );
-        })}
-      </div>
+          </div>
 
-      <div className="flex justify-between mt-6">
-        <button
-          onClick={handleNext}
-          className="bg-green-600 hover:bg-green-700 py-3 px-6 rounded-lg font-bold"
-        >
-          Next Question
-        </button>
-        <button
-          onClick={handleExit}
-          className="bg-red-600 hover:bg-red-700 py-3 px-6 rounded-lg font-bold"
-        >
-          Exit
-        </button>
+          {/* Right Column - Player Questions */}
+          <div className="lg:col-span-2">
+            <div className="space-y-4">
+              {Object.keys(players).map((id, index) => {
+                const currentQ = questions[id]; 
+                return (
+                  <div key={id} className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 transform transition-all duration-300 hover:scale-[1.01]">
+                    {/* Player Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                          {players[id]?.charAt(0)?.toUpperCase() || "?"}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-blue-300">{players[id]}</h3>
+                          <div className="flex items-center space-x-2 text-sm text-gray-400">
+                            <span>Score: {scores[id] || 0}</span>
+                            <span>•</span>
+                            <span>Player {index + 1}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-green-500/20 px-3 py-1 rounded-full border border-green-400/30">
+                        <span className="text-xs text-green-400 font-medium">ACTIVE</span>
+                      </div>
+                    </div>
+
+                    {/* Question Content */}
+                    <div className="bg-white/5 rounded-xl p-4 mb-4">
+                      {renderQuestionContent(currentQ)}
+                    </div>
+
+                    {/* Option Elimination Controls */}
+                    {currentQ?.options && (
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium text-orange-400">⚡ Power Controls:</span>
+                          <span className="text-xs text-gray-400">Eliminate options for this player</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {currentQ.options.map((opt, i) => {
+                            const eliminated = adminEliminatedOptions[id]?.includes(i);
+                            return (
+                              <button
+                                key={i}
+                                onClick={() => handleEliminateOption(id, i)}
+                                className={`p-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+                                  eliminated
+                                    ? "bg-red-900/50 border-2 border-red-500/50 text-red-200 line-through cursor-not-allowed"
+                                    : "bg-orange-600/20 hover:bg-orange-600/40 border-2 border-orange-500/30 hover:border-orange-400/50 text-orange-200 hover:text-white transform hover:scale-105"
+                                }`}
+                                disabled={eliminated}
+                              >
+                                <span className="mr-2">{eliminated ? "❌" : "⚡"}</span>
+                                Option {i + 1}: {opt.length > 30 ? opt.substring(0, 30) + "..." : opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Correct Answer Display */}
+                    {currentQ?.answer && (
+                      <div className="mt-4 bg-green-500/10 border border-green-400/30 rounded-lg p-3">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-green-400">✅</span>
+                          <span className="text-sm font-medium text-green-300">
+                            Correct Answer: {currentQ.answer}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Actions */}
+        <div className="fixed bottom-6 right-6 flex space-x-4">
+          <button
+            onClick={handleNext}
+            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+          >
+            <span className="mr-2">⏭️</span>
+            Next Question
+          </button>
+          <button
+            onClick={handleExit}
+            className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+          >
+            <span className="mr-2">🚪</span>
+            Exit Quiz
+          </button>
+        </div>
       </div>
     </div>
   );
