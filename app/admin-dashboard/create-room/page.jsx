@@ -67,7 +67,7 @@ export default function CreateRoomPage() {
       if (qrContainer) {
         qrContainer.innerHTML = "";
         new window.QRCode(qrContainer, {
-          text: `${window.location.origin}/?roomId=${roomInput}`,
+          text: `https://quiz-app-pied-omega.vercel.app//?roomId=${roomInput}`,
           width: 128,
           height: 128,
           colorDark: "#000000",
