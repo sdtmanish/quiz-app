@@ -100,7 +100,8 @@ export default function AdminLobbyPage() {
           {roomId && (
             <div className="bg-white p-4 rounded-lg shadow-lg">
               <QRCode
-                value={`${window.location.origin}/join?roomId=${roomId}`}
+               value={`${window.location.origin}/?roomId=${encodeURIComponent(roomId)}`}
+
               />
             </div>
           )}
