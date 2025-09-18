@@ -78,6 +78,8 @@ export default function AdminLobbyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-8 flex flex-col items-center justify-center">
+      <audio id="bg-music" src="/assets/Escapism.mp3" autoPlay loop />
+
       <h1 className="text-4xl font-extrabold text-center text-yellow-300 mb-8 drop-shadow-lg">
         Admin Lobby
       </h1>

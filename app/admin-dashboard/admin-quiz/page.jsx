@@ -277,6 +277,7 @@ export default function AdminQuestionsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+      <audio src="/assets/Unforgettable.mp3"  autoPlay loop></audio>
       <div className="h-screen flex flex-col p-4">
         {/* Compact Header */}
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/20">
