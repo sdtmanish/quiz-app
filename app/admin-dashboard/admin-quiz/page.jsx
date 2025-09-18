@@ -16,6 +16,8 @@ export default function AdminQuestionsPage() {
   const [adminEliminatedOptions, setAdminEliminatedOptions] = useState({});
   const [quizOver, setQuizOver] = useState(false);
   const [answeredPlayers, setAnsweredPlayers] = useState({})
+  const [eliminationRequests, setEliminationRequests] = useState({});
+
 
   useEffect(() => {
     // Check admin authentication
@@ -91,9 +93,18 @@ export default function AdminQuestionsPage() {
       setAnsweredPlayers((prev) => ({ ...prev, [playerId]: true }))
     })
 
+    socket.on("elimination_requested", ({playerId}) =>{
+       setEliminationRequests((prev) => ({
+    ...prev,
+    [playerId]: true, // mark request as active
+  }));
+
+    })
+
     socket.on("show_question", () => {
       setAdminEliminatedOptions({});
       setAnsweredPlayers({})
+      
 
     }
     )
@@ -107,6 +118,7 @@ export default function AdminQuestionsPage() {
       socket.off("option_restored");
       socket.off("show_question");
       socket.off("player_answered")
+      socket.off("elimination_requested");
     };
   }, [roomId, adminName, router]);
 
@@ -385,6 +397,15 @@ export default function AdminQuestionsPage() {
                           </div>
                         </div>
                       </div>
+                    <button
+  className={`px-3 py-2 rounded-lg text-sm font-semibold border shadow-sm transition-all duration-300 transform 
+    ${eliminationRequests[id] 
+      ? "bg-red-500 border-red-400 text-white hover:bg-red-600 hover:shadow-md hover:scale-105"  
+      : "bg-green-600 border-green-400 text-white hover:bg-green-700 hover:shadow-md hover:scale-105"}  
+  `}
+>
+  ⚡ Elimination Req
+</button>
 
 
                       {answeredPlayers[id] ? (

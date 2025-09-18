@@ -45,7 +45,7 @@ export default function QuizPage() {
         isAdmin: adminName === effectiveName,
         gameId: localStorage.getItem(`gameId-${roomId}`) || Date.now().toString(),
       });
-      
+
       hasJoinedRef.current = true;
     }
 
@@ -58,7 +58,7 @@ export default function QuizPage() {
       const isCurrentUserAdmin = socket.id === data.adminId;
       setIsAdmin(isCurrentUserAdmin);
       setLoading(false);
-      
+
       // If admin, show the question from game state
       if (isCurrentUserAdmin && data.questions && data.questions[socket.id]) {
         setQuestion(data.questions[socket.id]);
@@ -138,6 +138,14 @@ export default function QuizPage() {
     }
   };
 
+  const handleEliminationReq = ()=>{
+
+    socket.emit("request_elimination", {roomId, playerId:socket.id} )
+    console.log("Elimination req sent by :", socket.id);
+
+
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
@@ -184,21 +192,37 @@ export default function QuizPage() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white overflow-hidden">
       <div className="h-screen flex flex-col p-2 sm:p-4">
         {/* Compact Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-4 bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 gap-2 sm:gap-0">
-          <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center font-bold text-xs sm:text-sm">
-              Q{currentIndex + 1}
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm font-bold">Question {currentIndex + 1}</p>
-              <p className="text-xs text-gray-400">Room: {roomId}</p>
-            </div>
-          </div>
-          <div className="text-left sm:text-right">
-            <p className="text-xs sm:text-sm font-bold text-yellow-400">🏆 Your Score</p>
-            <p className="text-sm sm:text-lg font-bold text-green-400">{scores[socket.id] || 0} pts</p>
-          </div>
-        </div>
+        {/* Compact Header */}
+<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-4 bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 gap-2 sm:gap-0">
+  {/* Left: Question info */}
+  <div className="flex items-center space-x-3">
+    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center font-bold text-xs sm:text-sm">
+      Q{currentIndex + 1}
+    </div>
+    <div>
+      <p className="text-xs sm:text-sm font-bold">Question {currentIndex + 1}</p>
+      <p className="text-xs text-gray-400">Room: {roomId}</p>
+    </div>
+  </div>
+
+  {/* Right: Score + Req for Elimination */}
+  <div className="flex flex-row items-center gap-3 ml-auto">
+    {/* Score Section */}
+    <div className="flex flex-col items-end">
+      <p className="text-xs sm:text-sm font-bold text-yellow-400">🏆 Your Score</p>
+      <p className="text-sm sm:text-lg font-bold text-green-400">
+        {scores[socket.id] || 0} pts
+      </p>
+    </div>
+
+    {/* Req for Elimination Box */}
+    <div className="px-3 sm:px-4 py-2 sm:py-3 border border-blue-400 rounded-xl text-sm sm:text-base font-medium text-blue-300 hover:border-blue-300 hover:cursor-pointer active:text-amber-200 active:border-amber-200"
+    onClick={handleEliminationReq} >
+      Req for Elimination
+    </div>
+  </div>
+</div>
+
 
         {/* Main Content Area - Responsive Layout */}
         <div className="flex-1 flex flex-col lg:flex-row gap-3 sm:gap-4 min-h-0">
@@ -256,41 +280,38 @@ export default function QuizPage() {
                 const isWrong = answerSubmitted && isSelected && correctAnswer !== i;
                 const showCorrect = answerSubmitted && correctAnswer === i;
                 const isDisabled = isAdmin || isEliminated || answerSubmitted;
-                
+
                 return (
                   <button
                     key={i}
                     onClick={() => handleSubmit(i)}
                     disabled={isDisabled}
-                    className={`group relative p-3 sm:p-4 rounded-xl border-2 text-left transition-all duration-300 transform min-h-0 ${
-                      isEliminated
+                    className={`group relative p-3 sm:p-4 rounded-xl border-2 text-left transition-all duration-300 transform min-h-0 ${isEliminated
                         ? "bg-red-900/20 border-red-500/50 text-red-300 line-through cursor-not-allowed opacity-50"
                         : isWrong
-                        ? "bg-gradient-to-r from-red-500/30 to-red-600/30 border-red-400 shadow-lg shadow-red-500/20"
-                        : showCorrect
-                        ? "bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-green-400 shadow-lg shadow-green-500/20 scale-[1.02]"
-                        : isSelected && !answerSubmitted
-                        ? "bg-gradient-to-r from-blue-500/30 to-blue-600/30 border-blue-400 shadow-lg shadow-blue-500/20 scale-[1.01]"
-                        : "bg-white/10 backdrop-blur-sm border-white/20 hover:border-blue-400/50 hover:bg-blue-500/10 hover:scale-[1.01] hover:shadow-lg active:scale-95"
-                    } ${!isDisabled ? "cursor-pointer" : ""}`}
+                          ? "bg-gradient-to-r from-red-500/30 to-red-600/30 border-red-400 shadow-lg shadow-red-500/20"
+                          : showCorrect
+                            ? "bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-green-400 shadow-lg shadow-green-500/20 scale-[1.02]"
+                            : isSelected && !answerSubmitted
+                              ? "bg-gradient-to-r from-blue-500/30 to-blue-600/30 border-blue-400 shadow-lg shadow-blue-500/20 scale-[1.01]"
+                              : "bg-white/10 backdrop-blur-sm border-white/20 hover:border-blue-400/50 hover:bg-blue-500/10 hover:scale-[1.01] hover:shadow-lg active:scale-95"
+                      } ${!isDisabled ? "cursor-pointer" : ""}`}
                   >
                     <div className="flex items-center space-x-2 sm:space-x-3">
-                      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all ${
-                        isEliminated
+                      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all ${isEliminated
                           ? "bg-red-500/30 text-red-300"
                           : isWrong
-                          ? "bg-red-500 text-white"
-                          : showCorrect
-                          ? "bg-green-500 text-white animate-pulse"
-                          : isSelected && !answerSubmitted
-                          ? "bg-blue-500 text-white animate-pulse"
-                          : "bg-white/20 text-white group-hover:bg-blue-500/50"
-                      }`}>
+                            ? "bg-red-500 text-white"
+                            : showCorrect
+                              ? "bg-green-500 text-white animate-pulse"
+                              : isSelected && !answerSubmitted
+                                ? "bg-blue-500 text-white animate-pulse"
+                                : "bg-white/20 text-white group-hover:bg-blue-500/50"
+                        }`}>
                         {isEliminated ? "❌" : isWrong ? "✗" : showCorrect ? "✓" : isSelected && !answerSubmitted ? "?" : String.fromCharCode(65 + i)}
                       </div>
-                      <span className={`font-medium flex-1 text-sm sm:text-base ${
-                        isWrong ? "text-red-200 font-bold" : showCorrect ? "text-white font-bold" : isSelected && !answerSubmitted ? "text-blue-200 font-bold" : "text-gray-100"
-                      }`}>
+                      <span className={`font-medium flex-1 text-sm sm:text-base ${isWrong ? "text-red-200 font-bold" : showCorrect ? "text-white font-bold" : isSelected && !answerSubmitted ? "text-blue-200 font-bold" : "text-gray-100"
+                        }`}>
                         {opt}
                       </span>
                       {isWrong && (
@@ -300,7 +321,7 @@ export default function QuizPage() {
                       )}
                       {showCorrect && (
                         <div className="text-green-400 text-lg sm:text-xl animate-bounce">
-                          
+
                         </div>
                       )}
                       {isSelected && !answerSubmitted && (
@@ -334,7 +355,7 @@ export default function QuizPage() {
               <span className="text-lg sm:text-xl">🏆</span>
               <h3 className="text-base sm:text-lg font-bold text-yellow-400">Live Leaderboard</h3>
             </div>
-            
+
             {Object.entries(scores).length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
@@ -350,18 +371,16 @@ export default function QuizPage() {
                     .map(([id, score], index) => (
                       <div
                         key={id}
-                        className={`flex justify-between items-center p-2 sm:p-3 rounded-lg transition-all duration-300 ${
-                          socket.id === id
+                        className={`flex justify-between items-center p-2 sm:p-3 rounded-lg transition-all duration-300 ${socket.id === id
                             ? "bg-gradient-to-r from-blue-500/30 to-purple-500/30 border border-blue-400/50 shadow-lg"
-                            : index === 0 
-                            ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30" 
-                            : "bg-white/5 border border-white/10"
-                        }`}
+                            : index === 0
+                              ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30"
+                              : "bg-white/5 border border-white/10"
+                          }`}
                       >
                         <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
-                          <div className={`w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                            index === 0 ? "bg-yellow-500 text-black" : "bg-blue-500 text-white"
-                          }`}>
+                          <div className={`w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? "bg-yellow-500 text-black" : "bg-blue-500 text-white"
+                            }`}>
                             {index + 1}
                           </div>
                           <span className="font-semibold text-xs sm:text-sm truncate">{players[id] || "Unknown"}</span>
