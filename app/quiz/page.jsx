@@ -300,7 +300,7 @@ export default function QuizPage() {
                       )}
                       {showCorrect && (
                         <div className="text-green-400 text-lg sm:text-xl animate-bounce">
-                          🎉
+                          
                         </div>
                       )}
                       {isSelected && !answerSubmitted && (

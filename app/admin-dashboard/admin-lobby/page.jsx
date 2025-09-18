@@ -77,30 +77,34 @@ export default function AdminLobbyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white p-8 flex flex-col items-center justify-center">
       <h1 className="text-4xl font-extrabold text-center text-yellow-300 mb-8 drop-shadow-lg">
         Admin Lobby
       </h1>
 
-      <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl">
+      <div className="flex flex-col md:flex-row gap-8 w-full max-w-7xl">
         {/* Lobby Info & QR */}
         <div className="flex-1 bg-gray-800 bg-opacity-70 backdrop-blur-md p-6 rounded-2xl shadow-xl flex flex-col items-center">
-          <p className="text-lg mb-2">
+          
+          <div className="flex flex-row gap-4"><p className="text-lg mb-2">
             Room ID:{" "}
             <span className="font-mono font-bold text-indigo-300">
               {roomId}
             </span>
           </p>
-          <p className="text-lg mb-6">
+          <p className="text-lg mb-4">
             Admin:{" "}
             <span className="font-bold text-indigo-200">{adminName}</span>
           </p>
+          </div>
 
           {/* QR Code */}
           {roomId && (
             <div className="bg-white p-4 rounded-lg shadow-lg">
               <QRCode
                value={`${window.location.origin}/?roomId=${encodeURIComponent(roomId)}`}
+               
+               
 
               />
             </div>

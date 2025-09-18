@@ -15,6 +15,7 @@ export default function AdminQuestionsPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [adminEliminatedOptions, setAdminEliminatedOptions] = useState({});
   const [quizOver, setQuizOver] = useState(false);
+  const [answeredPlayers, setAnsweredPlayers] = useState({})
 
   useEffect(() => {
     // Check admin authentication
@@ -86,8 +87,16 @@ export default function AdminQuestionsPage() {
       });
     });
 
-    socket.on("show_question", () => setAdminEliminatedOptions({}));
+    socket.on("player_answered", ({ playerId }) => {
+      setAnsweredPlayers((prev) => ({ ...prev, [playerId]: true }))
+    })
 
+    socket.on("show_question", () => {
+      setAdminEliminatedOptions({});
+      setAnsweredPlayers({})
+
+    }
+    )
     return () => {
       socket.off("game_state");
       socket.off("score_update");
@@ -97,12 +106,19 @@ export default function AdminQuestionsPage() {
       socket.off("option_eliminated");
       socket.off("option_restored");
       socket.off("show_question");
+      socket.off("player_answered")
     };
   }, [roomId, adminName, router]);
+
+
+
+
+
 
   const handleNext = () => {
     socket.emit("next_question", { roomId });
     setAdminEliminatedOptions({});
+    setAnsweredPlayers({})
   };
 
   const handleExit = () => {
@@ -113,7 +129,7 @@ export default function AdminQuestionsPage() {
 
   const handleEliminateOption = (playerId, optionIndex) => {
     const isCurrentlyEliminated = adminEliminatedOptions[playerId]?.includes(optionIndex);
-    
+
     if (isCurrentlyEliminated) {
       // Restore the option
       socket.emit("restore_option", { roomId, targetPlayerId: playerId, optionIndex });
@@ -144,7 +160,7 @@ export default function AdminQuestionsPage() {
               <img
                 src={q.mediaUrl}
                 alt="Question media"
-                className="max-h-64 rounded-lg shadow-lg"
+                className="max-h-22 rounded-lg shadow-lg"
               />
             )}
           </div>
@@ -168,7 +184,7 @@ export default function AdminQuestionsPage() {
             {q.mediaUrl && (
               <video
                 controls
-                className="max-h-72 w-full rounded-lg shadow-lg"
+                className="max-h-22 w-full rounded-lg shadow-lg"
               >
                 <source src={q.mediaUrl} type="video/mp4" />
                 Your browser does not support video.
@@ -212,23 +228,21 @@ export default function AdminQuestionsPage() {
                 {sortedScores.map(([id, score], index) => (
                   <div
                     key={id}
-                    className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${
-                      index === 0
+                    className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${index === 0
                         ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/50"
                         : index === 1
-                        ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border-2 border-gray-400/50"
-                        : index === 2
-                        ? "bg-gradient-to-r from-orange-600/20 to-red-600/20 border-2 border-orange-400/50"
-                        : "bg-white/5 border border-white/10"
-                    }`}
+                          ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border-2 border-gray-400/50"
+                          : index === 2
+                            ? "bg-gradient-to-r from-orange-600/20 to-red-600/20 border-2 border-orange-400/50"
+                            : "bg-white/5 border border-white/10"
+                      }`}
                   >
                     <div className="flex items-center space-x-4">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                        index === 0 ? "bg-yellow-500 text-black" :
-                        index === 1 ? "bg-gray-400 text-black" :
-                        index === 2 ? "bg-orange-600 text-white" :
-                        "bg-blue-600 text-white"
-                      }`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${index === 0 ? "bg-yellow-500 text-black" :
+                          index === 1 ? "bg-gray-400 text-black" :
+                            index === 2 ? "bg-orange-600 text-white" :
+                              "bg-blue-600 text-white"
+                        }`}>
                         {index + 1}
                       </div>
                       <span className="text-lg font-semibold">
@@ -275,14 +289,14 @@ export default function AdminQuestionsPage() {
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span className="text-xs text-gray-300">Live</span>
               </div>
-              <div className="bg-blue-500/20 px-2 py-1 rounded-full border border-blue-400/30">
-                <span className="text-xs font-mono">Room: {roomId}</span>
+              <div className="bg-blue-500/20 px-4 py-1 rounded-full border border-blue-400/30">
+                <span className="text-xl font-mono">Room: {roomId}</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-center">
-                <div className="text-lg font-bold text-blue-400">Q{currentIndex + 1}</div>
-                <div className="text-xs text-gray-400">Current</div>
+                <div className="text-2xl font-bold text-blue-200">Q.{currentIndex + 1}</div>
+                
               </div>
               <div className="flex space-x-2">
                 <button
@@ -305,12 +319,12 @@ export default function AdminQuestionsPage() {
         {/* Main Content - Single Screen Layout */}
         <div className="flex-1 flex gap-4 min-h-0">
           {/* Left Sidebar - Leaderboard */}
-          <div className="w-72 bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 flex flex-col">
+          <div className="w-72 bg-white/10 backdrop-blur-md rounded-xl p-4 px-2 border border-white/20 flex flex-col">
             <div className="flex items-center space-x-2 mb-3">
               <span className="text-xl">🏆</span>
               <h2 className="text-lg font-bold text-yellow-400">Live Leaderboard</h2>
             </div>
-            
+
             {Object.keys(scores).length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
@@ -325,16 +339,14 @@ export default function AdminQuestionsPage() {
                   .map(([id, score], index) => (
                     <div
                       key={id}
-                      className={`flex justify-between items-center p-3 rounded-lg transition-all duration-300 ${
-                        index === 0 
-                          ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30" 
+                      className={`flex justify-between items-center p-3 rounded-lg transition-all duration-300 ${index === 0
+                          ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30"
                           : "bg-white/5 border border-white/10"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center space-x-2 min-w-0">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          index === 0 ? "bg-yellow-500 text-black" : "bg-blue-500 text-white"
-                        }`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? "bg-yellow-500 text-black" : "bg-blue-500 text-white"
+                          }`}>
                           {index + 1}
                         </div>
                         <span className="font-semibold text-sm truncate">{players[id] || "Unknown"}</span>
@@ -351,12 +363,12 @@ export default function AdminQuestionsPage() {
           </div>
 
           {/* Right Content - Player Management */}
-          <div className="flex-1 min-w-0">
-            <div className="h-full overflow-y-auto space-y-3">
+          <div className="flex-1  min-w-0">
+            <div className="h-full overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-3">
               {Object.keys(players).map((id, index) => {
-                const currentQ = questions[id]; 
+                const currentQ = questions[id];
                 return (
-                  <div key={id} className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                  <div key={id} className="bg-white/10 backdrop-blur-md rounded-xl h-[224px] p-4 border border-white/20">
                     {/* Compact Player Header */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
@@ -372,9 +384,18 @@ export default function AdminQuestionsPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="bg-green-500/20 px-2 py-1 rounded-full border border-green-400/30">
-                        <span className="text-xs text-green-400 font-medium">ACTIVE</span>
-                      </div>
+
+
+                      {answeredPlayers[id] ? (
+                        <div className="bg-green-500/20 px-2 py-1 rounded-full border border-green-400/30">
+                          <span className="text-xs text-green-400 font-medium">Answered</span>
+                        </div>
+                      ) : (
+                        <div className="bg-red-500/20 px-2 py-1 rounded-full border border-red-400/30">
+                          <span className="text-xs text-red-400 font-medium">Pending</span>
+                        </div>
+                      )}
+
                     </div>
 
                     <div className="grid lg:grid-cols-2 gap-4">
@@ -383,7 +404,7 @@ export default function AdminQuestionsPage() {
                         <div className="text-sm">
                           {renderQuestionContent(currentQ)}
                         </div>
-                        
+
                         {/* Correct Answer Display */}
                         {currentQ?.answer && (
                           <div className="mt-2 bg-green-500/10 border border-green-400/30 rounded p-2">
@@ -411,11 +432,10 @@ export default function AdminQuestionsPage() {
                                 <button
                                   key={i}
                                   onClick={() => handleEliminateOption(id, i)}
-                                  className={`p-2 rounded text-xs font-medium transition-all duration-300 transform hover:scale-105 ${
-                                    eliminated
+                                  className={`p-2 rounded text-xs font-medium transition-all duration-300 transform hover:scale-105 ${eliminated
                                       ? "bg-red-900/50 border border-red-500/50 text-red-200 hover:bg-red-800/60"
                                       : "bg-orange-600/20 hover:bg-orange-600/40 border border-orange-500/30 text-orange-200 hover:text-white"
-                                  }`}
+                                    }`}
                                 >
                                   <span className="mr-1">{eliminated ? "🔄" : "⚡"}</span>
                                   {eliminated ? "Restore" : "Eliminate"} {i + 1}
