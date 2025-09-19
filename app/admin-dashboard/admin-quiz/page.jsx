@@ -93,18 +93,18 @@ export default function AdminQuestionsPage() {
       setAnsweredPlayers((prev) => ({ ...prev, [playerId]: true }))
     })
 
-    socket.on("elimination_requested", ({playerId}) =>{
-       setEliminationRequests((prev) => ({
-    ...prev,
-    [playerId]: true, // mark request as active
-  }));
+    socket.on("elimination_requested", ({ playerId }) => {
+      setEliminationRequests((prev) => ({
+        ...prev,
+        [playerId]: true, // mark request as active
+      }));
 
     })
 
     socket.on("show_question", () => {
       setAdminEliminatedOptions({});
       setAnsweredPlayers({})
-      
+
 
     }
     )
@@ -159,6 +159,14 @@ export default function AdminQuestionsPage() {
       });
     }
   };
+
+  const handleEliminateOneWrong = (playerId) => {
+    socket.emit("eliminate_one_wrong", { roomId, targetPlayerId: playerId });
+  }
+
+  const handleEliminateTwoWrong = (playerId) => {
+    socket.emit("eliminate_two_wrong", { roomId, targetPlayerId: playerId });
+  }
 
   const renderQuestionContent = (q) => {
     if (!q) return <p className="text-gray-400">Waiting for a question...</p>;
@@ -241,19 +249,19 @@ export default function AdminQuestionsPage() {
                   <div
                     key={id}
                     className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${index === 0
-                        ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/50"
-                        : index === 1
-                          ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border-2 border-gray-400/50"
-                          : index === 2
-                            ? "bg-gradient-to-r from-orange-600/20 to-red-600/20 border-2 border-orange-400/50"
-                            : "bg-white/5 border border-white/10"
+                      ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/50"
+                      : index === 1
+                        ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border-2 border-gray-400/50"
+                        : index === 2
+                          ? "bg-gradient-to-r from-orange-600/20 to-red-600/20 border-2 border-orange-400/50"
+                          : "bg-white/5 border border-white/10"
                       }`}
                   >
                     <div className="flex items-center space-x-4">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${index === 0 ? "bg-yellow-500 text-black" :
-                          index === 1 ? "bg-gray-400 text-black" :
-                            index === 2 ? "bg-orange-600 text-white" :
-                              "bg-blue-600 text-white"
+                        index === 1 ? "bg-gray-400 text-black" :
+                          index === 2 ? "bg-orange-600 text-white" :
+                            "bg-blue-600 text-white"
                         }`}>
                         {index + 1}
                       </div>
@@ -289,7 +297,7 @@ export default function AdminQuestionsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
-      <audio src="/assets/Unforgettable.mp3"  autoPlay loop></audio>
+      <audio src="/assets/Unforgettable.mp3" autoPlay loop></audio>
       <div className="h-screen flex flex-col p-4">
         {/* Compact Header */}
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/20">
@@ -309,7 +317,7 @@ export default function AdminQuestionsPage() {
             <div className="flex items-center space-x-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-200">Q.{currentIndex + 1}</div>
-                
+
               </div>
               <div className="flex space-x-2">
                 <button
@@ -353,8 +361,8 @@ export default function AdminQuestionsPage() {
                     <div
                       key={id}
                       className={`flex justify-between items-center p-3 rounded-lg transition-all duration-300 ${index === 0
-                          ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30"
-                          : "bg-white/5 border border-white/10"
+                        ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30"
+                        : "bg-white/5 border border-white/10"
                         }`}
                     >
                       <div className="flex items-center space-x-2 min-w-0">
@@ -397,26 +405,50 @@ export default function AdminQuestionsPage() {
                           </div>
                         </div>
                       </div>
-                    <button
-  className={`px-3 py-2 rounded-lg text-sm font-semibold border shadow-sm transition-all duration-300 transform 
-    ${eliminationRequests[id] 
-      ? "bg-red-500 border-red-400 text-white hover:bg-red-600 hover:shadow-md hover:scale-105"  
-      : "bg-green-600 border-green-400 text-white hover:bg-green-700 hover:shadow-md hover:scale-105"}  
+                      <button
+                        className={`px-3 py-2 rounded-lg text-sm font-semibold border shadow-sm transition-all duration-300 transform cursor-pointer
+    ${eliminationRequests[id]
+                            ? "bg-red-500/50 border-red-400 text-white hover:bg-red-600 hover:shadow-md hover:scale-105"
+                            : "bg-green-600/30 border-green-400 text-white hover:bg-green-700 hover:shadow-md hover:scale-105"}  
   `}
->
-  ⚡ Elimination Req
-</button>
+                      >
+                        ⚡ Elimination Req
+                      </button>
 
 
                       {answeredPlayers[id] ? (
-                        <div className="bg-green-500/20 px-2 py-1 rounded-full border border-green-400/30">
+                        <div className="bg-green-500/20 px-3 py-1 rounded-full border border-green-400/30 cursor-pointer">
                           <span className="text-xs text-green-400 font-medium">Answered</span>
                         </div>
                       ) : (
-                        <div className="bg-red-500/20 px-2 py-1 rounded-full border border-red-400/30">
+                        <div className="bg-red-500/20 px-3 py-1 rounded-full border border-red-400/30 cursor-pointer">
                           <span className="text-xs text-red-400 font-medium">Pending</span>
                         </div>
                       )}
+
+
+                      <div
+                        onClick={() => eliminationRequests[id] && handleEliminateOneWrong(id)}
+                        className={`px-3 py-2 rounded-full text-xs border transition
+    ${eliminationRequests[id]
+                            ? "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
+                            : "bg-gray-700 text-gray-400 border-gray-500 cursor-not-allowed"}
+  `}
+                      >
+                        Remove 1 wrong
+                      </div>
+
+                      <div
+                        onClick={() => eliminationRequests[id] && handleEliminateTwoWrong(id)}
+                        className={`px-3 py-2 rounded-full text-xs border transition
+    ${eliminationRequests[id]
+                            ? "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
+                            : "bg-gray-700 text-gray-400 border-gray-500 cursor-not-allowed"}
+  `}
+                      >
+                        Eliminate 50:50
+                      </div>
+
 
                     </div>
 
@@ -455,8 +487,8 @@ export default function AdminQuestionsPage() {
                                   key={i}
                                   onClick={() => handleEliminateOption(id, i)}
                                   className={`p-2 rounded text-xs font-medium transition-all duration-300 transform hover:scale-105 ${eliminated
-                                      ? "bg-red-900/50 border border-red-500/50 text-red-200 hover:bg-red-800/60"
-                                      : "bg-orange-600/20 hover:bg-orange-600/40 border border-orange-500/30 text-orange-200 hover:text-white"
+                                    ? "bg-red-900/50 border border-red-500/50 text-red-200 hover:bg-red-800/60"
+                                    : "bg-orange-600/20 hover:bg-orange-600/40 border border-orange-500/30 text-orange-200 hover:text-white"
                                     }`}
                                 >
                                   <span className="mr-1">{eliminated ? "🔄" : "⚡"}</span>

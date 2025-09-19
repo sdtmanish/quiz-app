@@ -13,55 +13,55 @@ export default function AdminLobbyPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    // Check admin authentication
-    const token = localStorage.getItem("adminToken");
-    if (!token) {
-      router.push("/login");
-      return;
+useEffect(() => {
+  // Check admin authentication
+  const token = localStorage.getItem("adminToken");
+  if (!token) {
+    router.push("/login");
+    return;
+  }
+
+  if (!roomId || !adminName) {
+    router.push("/admin-dashboard/create-room");
+    return;
+  }
+
+  if (!socket.connected) socket.connect();
+
+  // Admin joins the room (only once)
+  socket.emit("join_game", { roomId, playerName: adminName, isAdmin: true });
+
+  // Listeners
+  const handleGameState = (data) => {
+    const filteredPlayers = { ...data.players };
+    if (data.adminId in filteredPlayers) {
+      delete filteredPlayers[data.adminId];
     }
+    setPlayers(filteredPlayers);
+    setScores(data.scores || {});
+    setLoading(false);
+  };
 
-    if (!roomId || !adminName) {
-      router.push("/admin-dashboard/create-room");
-      return;
-    }
+  const handleNoQuestions = () => {
+    alert("No questions found! Add questions first.");
+    setLoading(false);
+  };
 
-    if (!socket.connected) socket.connect();
+  const handleShowQuestion = () => {
+    router.push("/quiz");
+  };
 
-    // Admin joins the room
-    socket.emit("join_game", { roomId, playerName: adminName, isAdmin: true });
+  socket.on("game_state", handleGameState);
+  socket.on("no_questions_found", handleNoQuestions);
+  socket.on("show_question", handleShowQuestion);
 
-    // Listen for game state updates
-    socket.on("game_state", (data) => {
-      // Ensure admin is not in players list
-      const filteredPlayers = { ...data.players };
+  return () => {
+    socket.off("game_state", handleGameState);
+    socket.off("no_questions_found", handleNoQuestions);
+    socket.off("show_question", handleShowQuestion);
+  };
+}, []); // ✅ empty deps: run once
 
-      if (data.adminId in filteredPlayers) {
-        delete filteredPlayers[data.adminId];
-      }
-
-      setPlayers(filteredPlayers);
-      setScores(data.scores || {});
-      setLoading(false);
-    });
-
-    socket.on("no_questions_found", () => {
-      alert("No questions found! Add questions first.");
-      setLoading(false);
-    });
-
-    socket.on("show_question", () => {
-      // Navigate to Quiz page when quiz starts
-      router.push("/quiz");
-    });
-
-    return () => {
-      socket.off("game_state");
-      socket.off("no_questions_found");
-      socket.off("show_question");
-      // Keep socket connected for QuizPage
-    };
-  }, [roomId, adminName, router]);
 
   const handleStartQuiz = () => {
     socket.emit("start_quiz", { roomId });
