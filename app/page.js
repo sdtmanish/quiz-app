@@ -54,7 +54,7 @@ export default function JoinPage() {
 
       <div className="bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-700 w-full max-w-sm space-y-6">
         <h1 className="text-3xl font-extrabold text-center text-indigo-400">
-          Join Game
+          Join Cohort
         </h1>
 
         <input
@@ -76,7 +76,7 @@ export default function JoinPage() {
           disabled={isLoading}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         >
-          {isLoading ? "Joining..." : "Join Room"}
+          {isLoading ? "Joining..." : "Join Cohort"}
         </button>
       </div>
     </div>

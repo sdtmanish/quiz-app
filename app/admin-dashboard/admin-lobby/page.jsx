@@ -11,6 +11,7 @@ export default function AdminLobbyPage() {
   const [players, setPlayers] = useState({});
   const [scores, setScores] = useState({});
   const [loading, setLoading] = useState(true);
+  const [eliminationsPerPlayer, setEliminationsPerPlayer] = useState(0);
   const router = useRouter();
 
 useEffect(() => {
@@ -40,6 +41,7 @@ useEffect(() => {
     setPlayers(filteredPlayers);
     setScores(data.scores || {});
     setLoading(false);
+    setEliminationsPerPlayer(data.eliminationsPerPlayer);
   };
 
   const handleNoQuestions = () => {
@@ -81,21 +83,22 @@ useEffect(() => {
       <audio id="bg-music" src="/assets/Escapism.mp3" autoPlay loop />
 
       <h1 className="text-4xl font-extrabold text-center text-yellow-300 mb-8 drop-shadow-lg">
-        Admin Lobby
+        Teacher Lobby
       </h1>
+      <h2 className="mb-2">Eliminations Allowed Per Player: <span className="text-blue-400 text-2xl font-extrabold">{eliminationsPerPlayer}</span></h2>
 
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-7xl">
         {/* Lobby Info & QR */}
         <div className="flex-1 bg-gray-800 bg-opacity-70 backdrop-blur-md p-6 rounded-2xl shadow-xl flex flex-col items-center">
           
           <div className="flex flex-row gap-4"><p className="text-lg mb-2">
-            Room ID:{" "}
+            Cohort ID:{" "}
             <span className="font-mono font-bold text-indigo-300">
               {roomId}
             </span>
           </p>
           <p className="text-lg mb-4">
-            Admin:{" "}
+            Teacher:{" "}
             <span className="font-bold text-indigo-200">{adminName}</span>
           </p>
           </div>

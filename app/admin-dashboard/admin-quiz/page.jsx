@@ -15,9 +15,9 @@ export default function AdminQuestionsPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [adminEliminatedOptions, setAdminEliminatedOptions] = useState({});
   const [quizOver, setQuizOver] = useState(false);
-  const [answeredPlayers, setAnsweredPlayers] = useState({})
+  const [answeredPlayers, setAnsweredPlayers] = useState({});
   const [eliminationRequests, setEliminationRequests] = useState({});
-
+  const [eliminationsPerPlayer, setEliminationsPerPlayer] = useState(0);
 
   useEffect(() => {
     // Check admin authentication
@@ -46,6 +46,7 @@ export default function AdminQuestionsPage() {
       setScores(data.scores || {});
       setCurrentIndex(data.currentQuestionIndex || 0);
       setAdminEliminatedOptions(data.eliminatedOptions || {});
+      setEliminationsPerPlayer(data.eliminationsPerPlayer);
 
       // Handle quiz restoration after admin refresh
       if (data.isQuizActive === true && data.currentQuestionIndex >= 0) {
@@ -84,30 +85,46 @@ export default function AdminQuestionsPage() {
     socket.on("option_restored", ({ optionIndex, targetPlayerId }) => {
       setAdminEliminatedOptions((prev) => {
         const current = prev[targetPlayerId] || [];
-        const filtered = current.filter(idx => idx !== optionIndex);
+        const filtered = current.filter((idx) => idx !== optionIndex);
         return { ...prev, [targetPlayerId]: filtered };
       });
     });
 
     socket.on("player_answered", ({ playerId }) => {
-      setAnsweredPlayers((prev) => ({ ...prev, [playerId]: true }))
-    })
+      setAnsweredPlayers((prev) => ({ ...prev, [playerId]: true }));
+    });
 
-    socket.on("elimination_requested", ({ playerId }) => {
+    socket.on("elimination_requested", ({ playerId, used, allowed }) => {
       setEliminationRequests((prev) => ({
         ...prev,
-        [playerId]: true, // mark request as active
+        [playerId]: {
+          requested: true,
+          used,
+          allowed,
+        },
       }));
+    });
 
-    })
+    socket.on("show_question", ({ eliminationsUsed, eliminationsPerPlayer }) => {
+  setAdminEliminatedOptions({});
+  setAnsweredPlayers({});
 
-    socket.on("show_question", () => {
-      setAdminEliminatedOptions({});
-      setAnsweredPlayers({})
-
-
+  // Preserve used/allowed counts while resetting request state
+  setEliminationRequests((prev) => {
+    const updated = {};
+    for (const id in prev) {
+      updated[id] = {
+        ...prev[id],
+        requested: false, // reset request flag
+        used: eliminationsUsed?.[id] ?? prev[id]?.used ?? 0,
+        allowed: eliminationsPerPlayer ?? prev[id]?.allowed ?? 0,
+      };
     }
-    )
+    return updated;
+  });
+});
+
+
     return () => {
       socket.off("game_state");
       socket.off("score_update");
@@ -117,20 +134,22 @@ export default function AdminQuestionsPage() {
       socket.off("option_eliminated");
       socket.off("option_restored");
       socket.off("show_question");
-      socket.off("player_answered")
+      socket.off("player_answered");
       socket.off("elimination_requested");
     };
   }, [roomId, adminName, router]);
 
-
-
-
-
-
   const handleNext = () => {
     socket.emit("next_question", { roomId });
     setAdminEliminatedOptions({});
-    setAnsweredPlayers({})
+    setAnsweredPlayers({});
+    setEliminationRequests((prev) => {
+      const updated = {};
+      for (const id in prev) {
+        updated[id] = { ...prev[id], requested: false };
+      }
+      return updated;
+    });
   };
 
   const handleExit = () => {
@@ -143,15 +162,13 @@ export default function AdminQuestionsPage() {
     const isCurrentlyEliminated = adminEliminatedOptions[playerId]?.includes(optionIndex);
 
     if (isCurrentlyEliminated) {
-      // Restore the option
       socket.emit("restore_option", { roomId, targetPlayerId: playerId, optionIndex });
       setAdminEliminatedOptions((prev) => {
         const current = prev[playerId] || [];
-        const filtered = current.filter(idx => idx !== optionIndex);
+        const filtered = current.filter((idx) => idx !== optionIndex);
         return { ...prev, [playerId]: filtered };
       });
     } else {
-      // Eliminate the option
       socket.emit("eliminate_option", { roomId, targetPlayerId: playerId, optionIndex });
       setAdminEliminatedOptions((prev) => {
         const current = prev[playerId] || [];
@@ -162,11 +179,11 @@ export default function AdminQuestionsPage() {
 
   const handleEliminateOneWrong = (playerId) => {
     socket.emit("eliminate_one_wrong", { roomId, targetPlayerId: playerId });
-  }
+  };
 
   const handleEliminateTwoWrong = (playerId) => {
     socket.emit("eliminate_two_wrong", { roomId, targetPlayerId: playerId });
-  }
+  };
 
   const renderQuestionContent = (q) => {
     if (!q) return <p className="text-gray-400">Waiting for a question...</p>;
@@ -202,10 +219,7 @@ export default function AdminQuestionsPage() {
           <div>
             <p className="font-semibold mb-2">{q.question}</p>
             {q.mediaUrl && (
-              <video
-                controls
-                className="max-h-22 w-full rounded-lg shadow-lg"
-              >
+              <video controls className="max-h-22 w-full rounded-lg shadow-lg">
                 <source src={q.mediaUrl} type="video/mp4" />
                 Your browser does not support video.
               </video>
@@ -222,7 +236,6 @@ export default function AdminQuestionsPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-8 flex flex-col items-center">
         <div className="max-w-4xl w-full">
-          {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-500 rounded-full mb-4 animate-bounce">
               <span className="text-4xl">🏆</span>
@@ -235,7 +248,6 @@ export default function AdminQuestionsPage() {
             </p>
           </div>
 
-          {/* Final Scoreboard */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
             <h3 className="text-2xl font-bold mb-6 text-center text-yellow-300">Final Leaderboard</h3>
             {sortedScores.length === 0 ? (
@@ -248,21 +260,28 @@ export default function AdminQuestionsPage() {
                 {sortedScores.map(([id, score], index) => (
                   <div
                     key={id}
-                    className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${index === 0
-                      ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/50"
-                      : index === 1
+                    className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${
+                      index === 0
+                        ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-400/50"
+                        : index === 1
                         ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border-2 border-gray-400/50"
                         : index === 2
-                          ? "bg-gradient-to-r from-orange-600/20 to-red-600/20 border-2 border-orange-400/50"
-                          : "bg-white/5 border border-white/10"
-                      }`}
+                        ? "bg-gradient-to-r from-orange-600/20 to-red-600/20 border-2 border-orange-400/50"
+                        : "bg-white/5 border border-white/10"
+                    }`}
                   >
                     <div className="flex items-center space-x-4">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${index === 0 ? "bg-yellow-500 text-black" :
-                        index === 1 ? "bg-gray-400 text-black" :
-                          index === 2 ? "bg-orange-600 text-white" :
-                            "bg-blue-600 text-white"
-                        }`}>
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                          index === 0
+                            ? "bg-yellow-500 text-black"
+                            : index === 1
+                            ? "bg-gray-400 text-black"
+                            : index === 2
+                            ? "bg-orange-600 text-white"
+                            : "bg-blue-600 text-white"
+                        }`}
+                      >
                         {index + 1}
                       </div>
                       <span className="text-lg font-semibold">
@@ -280,7 +299,6 @@ export default function AdminQuestionsPage() {
             )}
           </div>
 
-          {/* Action Button */}
           <div className="text-center mt-8">
             <button
               onClick={handleExit}
@@ -299,25 +317,23 @@ export default function AdminQuestionsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
       <audio src="/assets/Unforgettable.mp3" autoPlay loop></audio>
       <div className="h-screen flex flex-col p-4">
-        {/* Compact Header */}
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Admin Quiz Dashboard
+                Quiz Dashboard
               </h1>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span className="text-xs text-gray-300">Live</span>
               </div>
               <div className="bg-blue-500/20 px-4 py-1 rounded-full border border-blue-400/30">
-                <span className="text-xl font-mono">Room: {roomId}</span>
+                <span className="text-xl font-mono">Cohort ID: {roomId}</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-200">Q.{currentIndex + 1}</div>
-
               </div>
               <div className="flex space-x-2">
                 <button
@@ -337,9 +353,7 @@ export default function AdminQuestionsPage() {
           </div>
         </div>
 
-        {/* Main Content - Single Screen Layout */}
         <div className="flex-1 flex gap-4 min-h-0">
-          {/* Left Sidebar - Leaderboard */}
           <div className="w-72 bg-white/10 backdrop-blur-md rounded-xl p-4 px-2 border border-white/20 flex flex-col">
             <div className="flex items-center space-x-2 mb-3">
               <span className="text-xl">🏆</span>
@@ -360,17 +374,25 @@ export default function AdminQuestionsPage() {
                   .map(([id, score], index) => (
                     <div
                       key={id}
-                      className={`flex justify-between items-center p-3 rounded-lg transition-all duration-300 ${index === 0
-                        ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30"
-                        : "bg-white/5 border border-white/10"
-                        }`}
+                      className={`flex justify-between items-center p-3 rounded-lg transition-all duration-300 ${
+                        index === 0
+                          ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/30"
+                          : "bg-white/5 border border-white/10"
+                      }`}
                     >
                       <div className="flex items-center space-x-2 min-w-0">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0 ? "bg-yellow-500 text-black" : "bg-blue-500 text-white"
-                          }`}>
+                        <div
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            index === 0
+                              ? "bg-yellow-500 text-black"
+                              : "bg-blue-500 text-white"
+                          }`}
+                        >
                           {index + 1}
                         </div>
-                        <span className="font-semibold text-sm truncate">{players[id] || "Unknown"}</span>
+                        <span className="font-semibold text-sm truncate">
+                          {players[id] || "Unknown"}
+                        </span>
                         {index === 0 && <span className="text-sm">👑</span>}
                       </div>
                       <div className="flex items-center space-x-1">
@@ -383,14 +405,15 @@ export default function AdminQuestionsPage() {
             )}
           </div>
 
-          {/* Right Content - Player Management */}
           <div className="flex-1  min-w-0">
-            <div className="h-full overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-3">
+            <div className="h-full overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-0">
               {Object.keys(players).map((id, index) => {
                 const currentQ = questions[id];
                 return (
-                  <div key={id} className="bg-white/10 backdrop-blur-md rounded-xl h-[224px] p-4 border border-white/20">
-                    {/* Compact Player Header */}
+                  <div
+                    key={id}
+                    className="bg-white/10 backdrop-blur-md rounded-xl h-[216px] p-4 border border-white/20"
+                  >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
@@ -407,17 +430,19 @@ export default function AdminQuestionsPage() {
                       </div>
                       <button
                         className={`px-3 py-2 rounded-lg text-sm font-semibold border shadow-sm transition-all duration-300 transform cursor-pointer
-    ${eliminationRequests[id]
-                            ? "bg-red-500/50 border-red-400 text-white hover:bg-red-600 hover:shadow-md hover:scale-105"
-                            : "bg-green-600/30 border-green-400 text-white hover:bg-green-700 hover:shadow-md hover:scale-105"}  
-  `}
+                          ${
+                            eliminationRequests[id]?.requested
+                              ? "bg-red-500/50 border-red-400 text-white hover:bg-red-600 hover:shadow-md hover:scale-105"
+                              : "bg-green-600/30 border-green-400 text-white hover:bg-green-700 hover:shadow-md hover:scale-105"
+                          }`}
                       >
-                        ⚡ Elimination Req
+                        ⚡ Elimination Req:{" "}
+                        {eliminationRequests[id]?.used || 0}/
+                        {eliminationRequests[id]?.allowed || eliminationsPerPlayer}
                       </button>
 
-
                       {answeredPlayers[id] ? (
-                        <div className="bg-green-500/20 px-3 py-1 rounded-full border border-green-400/30 cursor-pointer">
+                        <div className="bg-green-500/20 px-3 py-1 rounded-full border border-green-400 cursor-pointer">
                           <span className="text-xs text-green-400 font-medium">Answered</span>
                         </div>
                       ) : (
@@ -426,40 +451,43 @@ export default function AdminQuestionsPage() {
                         </div>
                       )}
 
-
                       <div
-                        onClick={() => eliminationRequests[id] && handleEliminateOneWrong(id)}
+                        onClick={() =>
+                          eliminationRequests[id]?.requested &&
+                          eliminationRequests[id].used <= eliminationRequests[id].allowed &&
+                          handleEliminateOneWrong(id)
+                        }
                         className={`px-3 py-2 rounded-full text-xs border transition
-    ${eliminationRequests[id]
-                            ? "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
-                            : "bg-gray-700 text-gray-400 border-gray-500 cursor-not-allowed"}
-  `}
+                          ${
+                            eliminationRequests[id]?.requested
+                              ? "bg-green-600/30 border-green-400 text-green-400 hover:bg-green-700 hover:shadow-md hover:scale-105 cursor-pointer"
+                              : "bg-red-500/20 text-red-400 border-gray-500 cursor-not-allowed"
+                          }`}
                       >
                         Remove 1 wrong
                       </div>
 
                       <div
-                        onClick={() => eliminationRequests[id] && handleEliminateTwoWrong(id)}
+                        onClick={() =>
+                          eliminationRequests[id]?.requested &&
+                          eliminationRequests[id].used <= eliminationRequests[id].allowed &&
+                          handleEliminateTwoWrong(id)
+                        }
                         className={`px-3 py-2 rounded-full text-xs border transition
-    ${eliminationRequests[id]
-                            ? "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
-                            : "bg-gray-700 text-gray-400 border-gray-500 cursor-not-allowed"}
-  `}
+                          ${
+                            eliminationRequests[id]?.requested
+                              ? "bg-green-600/30 border-green-400 text-green-400 hover:bg-green-700 hover:shadow-md hover:scale-105 cursor-pointer"
+                              : "bg-red-500/20 text-red-400 border-gray-500 cursor-not-allowed"
+                          }`}
                       >
                         Eliminate 50:50
                       </div>
-
-
                     </div>
 
                     <div className="grid lg:grid-cols-2 gap-4">
-                      {/* Question Content */}
                       <div className="bg-white/5 rounded-lg p-3">
-                        <div className="text-sm">
-                          {renderQuestionContent(currentQ)}
-                        </div>
+                        <div className="text-sm">{renderQuestionContent(currentQ)}</div>
 
-                        {/* Correct Answer Display */}
                         {currentQ?.answer && (
                           <div className="mt-2 bg-green-500/10 border border-green-400/30 rounded p-2">
                             <div className="flex items-center space-x-1">
@@ -472,12 +500,15 @@ export default function AdminQuestionsPage() {
                         )}
                       </div>
 
-                      {/* Option Controls */}
                       {currentQ?.options && (
                         <div>
                           <div className="flex items-center space-x-2 mb-2">
-                            <span className="text-xs font-medium text-orange-400">⚡ Power Controls:</span>
-                            <span className="text-xs text-gray-400">Click to eliminate/restore</span>
+                            <span className="text-xs font-medium text-orange-400">
+                              ⚡ Power Controls:
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              Click to eliminate/restore
+                            </span>
                           </div>
                           <div className="grid grid-cols-2 gap-1">
                             {currentQ.options.map((opt, i) => {
@@ -486,10 +517,11 @@ export default function AdminQuestionsPage() {
                                 <button
                                   key={i}
                                   onClick={() => handleEliminateOption(id, i)}
-                                  className={`p-2 rounded text-xs font-medium transition-all duration-300 transform hover:scale-105 ${eliminated
-                                    ? "bg-red-900/50 border border-red-500/50 text-red-200 hover:bg-red-800/60"
-                                    : "bg-orange-600/20 hover:bg-orange-600/40 border border-orange-500/30 text-orange-200 hover:text-white"
-                                    }`}
+                                  className={`p-2 rounded text-xs font-medium transition-all duration-300 transform hover:scale-105 ${
+                                    eliminated
+                                      ? "bg-red-900/50 border border-red-500/50 text-red-200 hover:bg-red-800/60"
+                                      : "bg-orange-600/20 hover:bg-orange-600/40 border border-orange-500/30 text-orange-200 hover:text-white"
+                                  }`}
                                 >
                                   <span className="mr-1">{eliminated ? "🔄" : "⚡"}</span>
                                   {eliminated ? "Restore" : "Eliminate"} {i + 1}

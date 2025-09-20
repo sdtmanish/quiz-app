@@ -10,6 +10,7 @@ export default function CreateRoomPage() {
   const [roomInput, setRoomInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [qrCodeGenerated, setQrCodeGenerated] = useState(false);
+  const [eliminationsPerPlayer, setEliminationsPerPlayer] =useState(0);
   const router = useRouter();
 
   // Check for authentication
@@ -53,7 +54,7 @@ export default function CreateRoomPage() {
     setRoom(roomInput);
 
     // Emit join_game as admin
-    socket.emit("join_game", { roomId: roomInput, playerName: adminInput, isAdmin: true });
+    socket.emit("join_game", { roomId: roomInput, playerName: adminInput, isAdmin: true, eliminationsPerPlayer });
 
     // Navigate to Admin Lobby
     router.push('/admin-dashboard/admin-lobby');
@@ -82,7 +83,7 @@ export default function CreateRoomPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white font-sans p-4">
       <div className="bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-700 w-full max-w-sm space-y-6">
-        <h1 className="text-3xl font-extrabold text-center text-indigo-400">Create Room</h1>
+        <h1 className="text-3xl font-extrabold text-center text-indigo-400">Create Cohort</h1>
 
         <input
           className="w-full bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-lg p-3"
@@ -100,7 +101,24 @@ export default function CreateRoomPage() {
           }}
           placeholder="Room ID"
         />
+          
 
+          {/* Eliminations Allowed per Player */}
+          <div>
+            <label className="block mb-1 text-sm text-gray-300" >Elimination Allowed Per Player</label>
+            <select
+            value={eliminationsPerPlayer}
+            onChange={(e) => setEliminationsPerPlayer(Number(e.target.value))}
+            className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-3"
+
+               
+            >
+              <option value={0}>0</option>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+            </select>
+          </div>
 
 
         <button
