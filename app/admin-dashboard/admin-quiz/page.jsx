@@ -405,16 +405,18 @@ export default function AdminQuestionsPage() {
             )}
           </div>
 
-          <div className="flex-1  min-w-0">
+          <div className="flex-1  min-w-0 ">
             <div className="h-full overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-0">
               {Object.keys(players).map((id, index) => {
                 const currentQ = questions[id];
                 return (
                   <div
                     key={id}
-                    className="bg-white/10 backdrop-blur-md rounded-xl h-[216px] p-4 border border-white/20"
+                    className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 
+           h-40 sm:h-48 md:h-56 lg:h-80 xl:h-72 2xl:h-56"
+
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex flex-wrap items-center justify-between mb-3 gap-2">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                           {players[id]?.charAt(0)?.toUpperCase() || "?"}
