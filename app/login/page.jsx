@@ -70,7 +70,7 @@ export default function AdminLogin() {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold transition duration-200"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold transition duration-200 cursor-pointer active:bg-blue-500 active:scale-95"
           >
             Login
           </button>

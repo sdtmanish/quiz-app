@@ -124,7 +124,7 @@ export default function CreateRoomPage() {
         <button
           onClick={handleCreateRoom}
           disabled={isLoading}
-          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg"
+          className="w-full cursor-pointer bg-green-600 hover:bg-green-700 active:bg-green-500 active:scale-95 text-white font-bold py-3 rounded-lg"
         >
           {isLoading ? "Creating..." : "Create Room"}
         </button>

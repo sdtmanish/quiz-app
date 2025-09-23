@@ -240,7 +240,7 @@ export default function AddQuestions() {
           className={`w-full py-3 font-bold rounded-md transition-colors ${
             loading
               ? 'bg-gray-400 cursor-not-allowed text-white'
-              : 'bg-green-500 hover:bg-green-600 text-white'
+              : 'bg-green-500 hover:bg-green-600 text-white cursor-pointer active:scale-95'
           }`}
         >
           {loading ? 'Submitting...' : 'Submit Question'}

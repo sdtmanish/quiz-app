@@ -139,7 +139,7 @@ useEffect(() => {
 
       <button
         onClick={handleStartQuiz}
-        className="mt-8 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 py-3 px-8 rounded-full font-extrabold text-lg shadow-xl transition-transform transform hover:scale-105"
+        className="mt-8 cursor-pointer bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 active:scale-95 py-3 px-8 rounded-full font-extrabold text-lg shadow-xl transition-transform transform hover:scale-105"
       >
         Start Quiz
       </button>

@@ -248,8 +248,8 @@ socket.on("show_question", ({ question, index, eliminationsUsed, eliminationsPer
                 ${
                   (eliminationsUsed[socket.id] || 0) >= eliminationsPerPlayer ||
                   requestedThisQuestion
-                    ? "border-gray-600 text-gray-500 cursor-not-allowed"
-                    : "border-blue-400 text-blue-300 hover:border-blue-300 hover:cursor-pointer active:text-amber-200 active:border-amber-200"
+                    ? "border-gray-400 bg-green-500/50 text-gray-100 cursor-not-allowed"
+                    : "border-blue-400 bg-blue-500/50 text-blue-100 hover:border-blue-300 hover:cursor-pointer active:text-amber-200 active:border-amber-200 active:scale-95"
                 }`}
               onClick={handleEliminationReq}
             >

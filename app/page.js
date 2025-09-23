@@ -46,7 +46,7 @@ export default function JoinPage() {
       
       {/* ✅ Login button pinned to top-right */}
       <button
-        className="absolute top-4 right-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300"
+        className="absolute top-4 right-4 bg-indigo-600 hover:bg-indigo-700 cursor-pointer active:bg-indigo-500 active:scale-95 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-300"
         onClick={() => router.push("/login")}   // ✅ fixed
       >
         Login
@@ -74,7 +74,7 @@ export default function JoinPage() {
         <button
           onClick={handleJoinRoom}
           disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer active:bg-blue-500 active:scale-95 text-white font-bold py-3 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         >
           {isLoading ? "Joining..." : "Join Cohort"}
         </button>

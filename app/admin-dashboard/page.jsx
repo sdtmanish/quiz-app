@@ -81,7 +81,7 @@ export default function AdminDashboard() {
         </h1>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+          className="flex items-center gap-2 cursor-pointer bg-red-600 hover:bg-red-700 active:bg-red-500 active:scale-95 text-white px-4 py-2 rounded-lg transition-colors"
         >
           <LogOut size={20} />
           Logout
@@ -93,7 +93,7 @@ export default function AdminDashboard() {
           <div
             key={idx}
             onClick={card.onClick}
-            className={`cursor-pointer p-8 rounded-2xl shadow-lg bg-gradient-to-br ${card.color} 
+            className={`cursor-pointer active:scale-95 p-8 rounded-2xl shadow-lg bg-gradient-to-br ${card.color} 
               text-white flex flex-col items-center justify-center gap-4 transform hover:scale-105 transition`}
           >
             {card.icon}
