@@ -19,6 +19,36 @@ export default function AdminQuestionsPage() {
   const [eliminationRequests, setEliminationRequests] = useState({});
   const [eliminationsPerPlayer, setEliminationsPerPlayer] = useState(0);
 
+  //palette for player-card borders
+  const playerBorderClasses = [
+    "border-yellow-400/50",
+    "border-green-400",
+    "border-blue-400",
+    "border-pink-400/50",
+    "border-indigo-400",
+    "border-orange-400/50",
+      "border-red-400/50",
+  "border-teal-400/50",
+  "border-purple-400/50",
+  "border-lime-400/50"
+
+  ]
+
+  //small stable hash so a playerid always maps to the same color(prevents color suffling)
+  const hashString = (str)=>{
+    let h=0;
+    for(let i=0;i<str.length;i++){
+      h = (h<<5)-h + str.charCodeAt(i);
+      h |=0;
+    }
+    return Math.abs(h);
+  }
+
+  const getBorderClassFor = (playerId, index)=>{
+    const pick = playerId ? hashString(playerId) % playerBorderClasses.length : index % playerBorderClasses.length;
+    return playerBorderClasses[pick];
+  }
+
   useEffect(() => {
     // Check admin authentication
     const token = localStorage.getItem("adminToken");
@@ -412,8 +442,8 @@ export default function AdminQuestionsPage() {
                 return (
                   <div
                     key={id}
-                    className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 
-           h-40 sm:h-48 md:h-56 lg:h-80 xl:h-72 2xl:h-56"
+                    className={`bg-white/10 backdrop-blur-md rounded-xl p-4 border ${getBorderClassFor(id,index)}
+           h-40 sm:h-48 md:h-56 lg:h-80 xl:h-72 2xl:h-56`}
 
                   >
                     <div className="flex flex-wrap items-center justify-between mb-3 gap-2">
