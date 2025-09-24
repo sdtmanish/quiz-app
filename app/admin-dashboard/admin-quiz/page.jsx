@@ -92,7 +92,10 @@ export default function AdminQuestionsPage() {
     });
 
     socket.on("score_update", (updatedScores) => setScores(updatedScores));
-    socket.on("quiz_ended", () => setQuizOver(true));
+    socket.on("quiz_ended", () =>{
+      setQuizOver(true),
+      handleExit();
+    });
     socket.on("room_not_found", () => {
       alert("Room not found");
       router.push("/");
