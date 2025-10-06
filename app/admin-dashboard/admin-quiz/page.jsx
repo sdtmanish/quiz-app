@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { socket } from "../../lib/socket";
 import { useRouter } from "next/navigation";
 import { useGame } from "../../context/GameContext";
+import {Volume2, VolumeX} from "lucide-react"
 
 export default function AdminQuestionsPage() {
   const { roomId, adminName } = useGame();
@@ -18,6 +19,8 @@ export default function AdminQuestionsPage() {
   const [answeredPlayers, setAnsweredPlayers] = useState({});
   const [eliminationRequests, setEliminationRequests] = useState({});
   const [eliminationsPerPlayer, setEliminationsPerPlayer] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef(null);
 
   //palette for player-card borders
   const playerBorderClasses = [
@@ -345,7 +348,10 @@ export default function AdminQuestionsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
-      <audio src="/assets/Unforgettable.mp3" autoPlay loop></audio>
+      <audio ref={audioRef} src="/assets/Unforgettable.mp3" autoPlay loop></audio>
+
+
+
       <div className="h-screen flex flex-col p-4">
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/20">
           <div className="flex items-center justify-between">
@@ -379,6 +385,27 @@ export default function AdminQuestionsPage() {
                   🚪 Exit
                 </button>
               </div>
+                    {/* 🎚️ Mute / Unmute Button */}
+<button
+  onClick={() => {
+    if (!audioRef.current) return;
+    if (audioRef.current.paused) {
+      audioRef.current.play();
+      setIsMuted(false);
+    } else {
+      audioRef.current.pause();
+      setIsMuted(true);
+    }
+  }}
+  className="bg-gray-800 bg-opacity-60 hover:bg-opacity-80 rounded-full p-3 transition-transform hover:scale-110 cursor-pointer"
+  title={isMuted ? "Play music" : "Mute music"}
+>
+  {isMuted ? (
+    <VolumeX className="w-6 h-6 text-red-400" />
+  ) : (
+    <Volume2 className="w-6 h-6 text-green-400" />
+  )}
+</button>
             </div>
           </div>
         </div>
