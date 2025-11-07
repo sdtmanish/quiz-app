@@ -1,48 +1,51 @@
 check this link https://github.com/sdtmanish/quizhubapi for checking server side code
 
 🕹️ How the Game Works
-✅ 1. Admin creates a room
-Admin logs in → creates a quiz room.
 
-✅ 2. Players join using room code
-Enter name → join lobby → waiting screen.
+✅ 1. Admin creates a room  
+Admin logs in and creates a quiz room.
 
-✅ 3. Admin starts the game
-Server broadcasts question in real-time.
+✅ 2. Players join using room code  
+Players enter their name and join the lobby.
 
-✅ 4. Player submits answer
-Server validates → scores → updates leaderboard.
+✅ 3. Admin starts the game  
+Server broadcasts questions in real time.
 
-✅ 5. Next question started by admin
-Smooth transitions & real-time updates.
+✅ 4. Player submits answer  
+Server validates the answer, updates score, and leaderboard.
 
-✅ 6. Game ends
-Final leaderboard displayed → admin can review results.
+✅ 5. Next question started by admin  
+Smooth transitions and real-time updates.
+
+✅ 6. Game ends  
+Final leaderboard displayed and results stored.
+
 
 📊 WebSocket Event Flow
-Player Events
-player:join
-player:answer
-player:leave
 
-Admin Events
-admin:start
-admin:next
-admin:end
+### Player Events
+- player:join  
+- player:answer  
+- player:leave  
 
-Server → Client Events
-question:show
-question:lock
-leaderboard:update
-game:ended
-room:snapshot
+### Admin Events
+- admin:start  
+- admin:next  
+- admin:end  
+
+### Server → Client Events
+- question:show  
+- question:lock  
+- leaderboard:update  
+- game:ended  
+- room:snapshot 
 
 📦 Future Enhancements
-Redis Pub/Sub for horizontal scaling
-Advanced analytics dashboard
-Public lobbies & matchmaking
-AI-based question generation
-Game history & player stats
+- Redis Pub/Sub for scaling  
+- Analytics dashboard  
+- Public matchmaking  
+- AI-generated questions  
+- Game history & stats  
 
 ## Getting Started
 
