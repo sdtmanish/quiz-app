@@ -1,4 +1,4 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+check this link https://github.com/sdtmanish/quizhubapi for checking server side code
 
 ## Getting Started
 
